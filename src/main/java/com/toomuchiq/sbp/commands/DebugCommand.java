@@ -3,23 +3,24 @@ package com.toomuchiq.sbp.commands;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
+import com.toomuchiq.sbp.Main;
 import com.toomuchiq.sbp.config.Config;
 import com.toomuchiq.sbp.utils.Utils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.world.entity.player.Player;
 
-public class HelloWorldCommand  {
+public class DebugCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("hw").executes(HelloWorldCommand::execute));
+        dispatcher.register(Commands.literal("debug").executes(DebugCommand::execute));
     }
 
     private static int execute(CommandContext<CommandSourceStack> command)  {
-        if(!Config.COMMON.debug.get()) return Utils.noDebug();
+        Config.COMMON.debug.set(!Config.COMMON.debug.get());
 
         if(command.getSource().getEntity() instanceof Player player) {
-            Utils.sendMessage(player, "&aH&be&cl&dl&eo &1W&2o&3r&4l&5d&l&4!");
+            Utils.sendMessage(player, "Set debug mode to &a&l" + Config.COMMON.debug.get().toString().toUpperCase());
         }
         return Command.SINGLE_SUCCESS;
     }

@@ -12,7 +12,7 @@ license="All rights reserved"
     # A text field displayed in the mod UI
     #credits="Thanks for this example mod goes to Java" #optional
     # A text field displayed in the mod UI
-    authors="TooMuchIq" #optional
+    authors="TooMuchIq, MasterMindGolem" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
     Ultimate GIGACHAD mod for Skybounds
