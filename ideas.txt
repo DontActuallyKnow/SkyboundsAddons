@@ -1,9 +1,9 @@
 (¯`·.¸¸.·´¯`·.¸¸.-> 𝔽𝔼𝔸𝕋𝕌ℝ𝔼𝕊 <-.¸¸.·´¯`·.¸¸.·´¯)
 
 𝕋𝕆𝔻𝕆
--
--
--
+- Command aliases / keybinds for commands
+- Crafting menu / list
+- Simple github api
 
 ℂ𝕆𝕄ℙ𝕃𝔼𝕋𝔼𝔻
 -
