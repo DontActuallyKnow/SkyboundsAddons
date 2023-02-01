@@ -28,7 +28,6 @@ public class HelloWorldCommand  {
                 return Command.SINGLE_SUCCESS;
             }
             ClientEventHandler.openConfigGui = true;
-
         }
         return Command.SINGLE_SUCCESS;
     }

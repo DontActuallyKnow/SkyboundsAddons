@@ -1,10 +1,12 @@
 package com.toomuchiq.sbp.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.toomuchiq.sbp.ui.components.CustomButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -19,7 +21,10 @@ public class ConfigGUI extends Screen {
 
     @Override
     protected void init() {
-        super.init();
+        addRenderableWidget(new CustomButton(this.width / 2 - 100, this.height / 4 + 96, 200, 20, new TranslatableComponent("configGui.title"), (widget) -> {
+            //Code to execute when button is clicked
+            this.onClose();
+        },new ResourceLocation("sbp:textures/gui/woah.png")));
     }
 
     @Override
