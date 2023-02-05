@@ -21,8 +21,8 @@ public class Main {
 
     //Colour Scheme?? Just change if you dislike
     public static class Colors {
-        public static final Color mainColor = new Color(0, 246, 216);
-        public static final Color secondaryColor = new Color(4, 37, 204);
+        public static final Color secondaryColor = new Color(0, 246, 216);
+        public static final Color mainColor = new Color(4, 37, 204);
         public static final Color boldColor = new Color(237, 187, 0);
         public static final Color mainColor2 = new Color(192, 4, 204);
         public static final Color secondaryColor2 = new Color(89, 4, 204);
