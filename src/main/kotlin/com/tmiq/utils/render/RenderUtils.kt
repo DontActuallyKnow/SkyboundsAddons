@@ -1,14 +1,16 @@
-package com.tmiq.utils
+package com.tmiq.utils.render
 
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.minecraft.util.math.BlockPos
+
 
 object RenderUtils {
 
     private const val MAX_OVERWORLD_BUILD_HEIGHT = 319
+
     private val beaconList = mutableMapOf<BlockPos, FloatArray>()
 
     fun init() {
@@ -18,10 +20,9 @@ object RenderUtils {
             }
         })
 
-        /*ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick {
+        ServerWorldEvents.UNLOAD.register(ServerWorldEvents.Unload{ _, _ ->
             beaconList.clear()
-        })*/
-
+        })
     }
 
     fun addBeaconToRender(pos: BlockPos, colorComponents: FloatArray) {
@@ -41,5 +42,7 @@ object RenderUtils {
         matrices.pop()
         //}
     }
+
+
 
 }
