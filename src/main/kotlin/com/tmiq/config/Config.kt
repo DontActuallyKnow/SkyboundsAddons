@@ -15,6 +15,6 @@ class Config : Config() {
     }
 
     @Category(name = "General", desc = "")
-    var categoryGeneral: CategoryGeneral = CategoryGeneral()
+    var categoryGeneral: CategoryGeneral = CategoryGeneral
 
 }

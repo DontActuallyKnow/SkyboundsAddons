@@ -19,9 +19,8 @@ repositories {
 	}
 }
 
-//TODO: MAKE SHADOW JAR WORK INSTEAD OF USING INCLUDE FOR THE LIBRARIES
-val shadowModImpl by configurations.creating {
-	configurations.modImplementation.get().extendsFrom(this)
+val shadowImpl: Configuration by configurations.creating {
+	configurations.implementation.get().extendsFrom(this)
 }
 
 dependencies {
@@ -32,23 +31,16 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	"modImplementation"("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
-	"modImplementation"("org.notenoughupdates.moulconfig:modern:${project.property("moulconfig_version")}")
 
 	implementation("org.reflections:reflections:0.9.12")
 	implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
 
-	include("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
-	include("org.notenoughupdates.moulconfig:modern:${project.property("moulconfig_version")}")
+	shadowImpl("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
+	shadowImpl("org.notenoughupdates.moulconfig:modern:${project.property("moulconfig_version")}")
 
 }
 
-//TODO: MAKE SHADOW JAR WORK INSTEAD OF USING INCLUDE FOR THE LIBRARIES
-tasks.shadowJar {
-	// Make sure to relocate MoulConfig to avoid version clashes with other mods
-	configurations = listOf(shadowModImpl)
-	relocate("io.github.notenoughupdates.moulconfig", "${project.property("maven_group")}.dependencies.moulconfig")
-	relocate("net.fabricmc.language.kotlin", "${project.property("maven_group")}.dependencies.fabric-language-kotlin")
-}
+// Tasks:
 
 tasks.processResources {
 	inputs.property("version", project.version)
@@ -67,6 +59,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 	}
 }
 
+val remapJar by tasks.named<net.fabricmc.loom.task.RemapJarTask>("remapJar") {
+	archiveClassifier.set("")
+	from(tasks.shadowJar)
+	input.set(tasks.shadowJar.get().archiveFile)
+}
+
 java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 	// if it is present.
@@ -78,9 +76,23 @@ java {
 }
 
 tasks.jar {
+	destinationDirectory.set(layout.buildDirectory.dir("badjars"))
 	from("LICENSE") {
 		rename { "${it}_${project.extensions.getByType<BasePluginExtension>().archivesName.get()}" }
 	}
+}
+
+tasks.shadowJar {
+	destinationDirectory.set(layout.buildDirectory.dir("badjars"))
+	archiveClassifier.set("all-dev")
+	configurations = listOf(shadowImpl)
+	doLast {
+		configurations.forEach {
+			println("Copying jars into mod: ${it.files}")
+		}
+	}
+
+	fun relocate(name: String) = relocate(name, "$group.deps.$name")
 }
 
 // configure the maven publication
