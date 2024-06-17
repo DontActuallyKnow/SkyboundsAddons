@@ -1,29 +1,30 @@
 {
 	"schemaVersion": 1,
-	"id": "sbe",
+	"id": "sba",
 	"version": "${version}",
-	"name": "skyboundsplus",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "SkyboundsAddons",
+	"description": "Companion mod for the Skybounds server! UNOFFICIAL",
 	"authors": [
-		"Me!"
+		"Tmiq",
+		"golem"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/sbe/icon.png",
+	"icon": "assets/sba/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"client": [
 			{
-				"value": "com.tmiq.Skyboundsplus",
+				"value": "com.tmiq.SkyboundsAddons",
 				"adapter": "kotlin"
 			}
 		]
 	},
 	"mixins": [
-		"sbe.mixins.json"
+		"sba.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.15.11",
