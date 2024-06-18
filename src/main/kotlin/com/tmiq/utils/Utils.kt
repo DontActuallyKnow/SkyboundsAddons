@@ -11,7 +11,7 @@ class Utils {
     /**
      * Returns the color code character
      *
-     * @return
+     * @return Minecaft color code char
      */
     fun getColorCodeChar(): Char {
         return '§'
@@ -53,10 +53,21 @@ class Utils {
      * @param str Message to send
      */
     fun sendChatMessage(str: String) {
-        var client = MinecraftClient.getInstance()
+        val client = MinecraftClient.getInstance()
 
-        var message = str.replace('&', getColorCodeChar())
+        val message = c(str, '&')
         client.inGameHud.chatHud.addMessage(Text.literal(message))
+    }
+
+    /**
+     * Translate specified symbol for color codes
+     *
+     * @param str Message to translate
+     * @param char Custom color code
+     * @return Message with translated color codes
+     */
+    fun c(str: String, char: Char): String {
+        return str.replace(char, getColorCodeChar())
     }
 
 }
