@@ -151,9 +151,11 @@ class RenderUtils {
         val textRenderer: TextRenderer = client.textRenderer
         val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
-        if(seeThroughBlocks) {
-            RenderSystem.disableBlend()
-            RenderSystem.disableCull()
+        if (seeThroughBlocks) {
+            RenderSystem.disableDepthTest()
+            RenderSystem.enableBlend()
+            RenderSystem.defaultBlendFunc()
+            RenderSystem.depthMask(false)
         }
 
         textRenderer.draw(
@@ -164,14 +166,15 @@ class RenderUtils {
             false,
             matrix4f,
             vertexConsumerProvider,
-            TextLayerType.NORMAL,
+            TextLayerType.SEE_THROUGH,
             0,
             LightmapTextureManager.MAX_LIGHT_COORDINATE
         )
 
-        if(seeThroughBlocks) {
-            RenderSystem.enableCull()
-            RenderSystem.enableBlend()
+        if (seeThroughBlocks) {
+            RenderSystem.depthMask(true)
+            RenderSystem.disableBlend()
+            RenderSystem.enableDepthTest()
         }
 
         matrixStack.pop()
