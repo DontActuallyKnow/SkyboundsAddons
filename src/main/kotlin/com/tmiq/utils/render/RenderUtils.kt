@@ -17,6 +17,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11
 
 class RenderUtils {
 
@@ -105,6 +106,13 @@ class RenderUtils {
         val textRenderer: TextRenderer = client.textRenderer
         val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
+        if (seeThroughBlocks) {
+            RenderSystem.disableDepthTest()
+            RenderSystem.enableBlend()
+            RenderSystem.defaultBlendFunc()
+            RenderSystem.depthMask(false)
+        }
+
         textRenderer.draw(
             text.literalString,
             offset,
@@ -152,10 +160,10 @@ class RenderUtils {
         val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
         if (seeThroughBlocks) {
-            RenderSystem.disableDepthTest()
-            RenderSystem.enableBlend()
-            RenderSystem.defaultBlendFunc()
-            RenderSystem.depthMask(false)
+            RenderSystem.disableDepthTest()  // Disable depth testing
+            RenderSystem.enableBlend()  // Enable blending
+            RenderSystem.defaultBlendFunc()  // Use the default blend function
+            RenderSystem.depthMask(false)  // Disable depth mask to avoid writing to the depth buffer
         }
 
         textRenderer.draw(
@@ -166,15 +174,15 @@ class RenderUtils {
             false,
             matrix4f,
             vertexConsumerProvider,
-            TextLayerType.SEE_THROUGH,
+            TextLayerType.NORMAL,
             0,
             LightmapTextureManager.MAX_LIGHT_COORDINATE
         )
 
         if (seeThroughBlocks) {
-            RenderSystem.depthMask(true)
-            RenderSystem.disableBlend()
-            RenderSystem.enableDepthTest()
+            RenderSystem.depthMask(true)  // Re-enable depth mask
+            RenderSystem.enableDepthTest()  // Re-enable depth testing
+            RenderSystem.disableBlend()  // Disable blending
         }
 
         matrixStack.pop()
