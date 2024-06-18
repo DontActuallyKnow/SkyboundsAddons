@@ -2,7 +2,7 @@ package com.tmiq.utils
 
 import java.util.*
 
-object NumberUtils {
+class NumberUtils {
 
     /**
      * Get decimal value from a roman numeral character

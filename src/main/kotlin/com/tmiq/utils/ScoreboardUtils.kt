@@ -1,5 +1,5 @@
 package com.tmiq.utils
 
-object ScoreboardUtils {
+class ScoreboardUtils {
 
 }

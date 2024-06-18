@@ -2,8 +2,11 @@ package com.tmiq.commands
 
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.minecraft.client.MinecraftClient
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
 
-object SkyboundsaddonsCommand {
+class SkyboundsaddonsCommand {
 
     //TODO: Implement MoulConfig after port
     fun init() {
@@ -17,6 +20,13 @@ object SkyboundsaddonsCommand {
                     /*MinecraftClient.getInstance().send {
                         config.openConfigGui()
                     }*/
+
+                    val message = Text.literal("§aHello").styled { style ->
+                        style.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("§cwhatever")))
+                    }
+
+                    MinecraftClient.getInstance().inGameHud.chatHud.addMessage(message)
+
                     0
                 }
 
