@@ -16,7 +16,7 @@
 	"icon": "assets/sba/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": [
+		"main": [
 			{
 				"value": "com.tmiq.SkyboundsAddons",
 				"adapter": "kotlin"

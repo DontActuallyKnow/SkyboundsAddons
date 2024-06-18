@@ -1,20 +1,28 @@
 package com.tmiq.commands
 
-import com.tmiq.SkyboundsAddons
-import com.tmiq.config.Config
-import io.github.notenoughupdates.moulconfig.managed.ManagedConfig
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
-import net.minecraft.client.MinecraftClient
-import java.io.File
 
 object SkyboundsaddonsCommand {
 
+    //TODO: Implement MoulConfig after port
     fun init() {
+        //val config = ManagedConfig.create(File("config/sba/config.json"), Config::class.java)
 
+        val aliases = listOf("sba", "skyboundsaddons", "sbaddons", "skyaddons")
+        aliases.forEach { alias ->
+            ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
 
+                val command = literal(alias).executes {
+                    /*MinecraftClient.getInstance().send {
+                        config.openConfigGui()
+                    }*/
+                    0
+                }
 
-
+                dispatcher.register(command)
+            }
+        }
     }
 
 

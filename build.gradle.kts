@@ -35,7 +35,7 @@ dependencies {
 	implementation("org.reflections:reflections:0.9.12")
 	implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
 
-	shadowImpl("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
+	include("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 	shadowImpl("org.notenoughupdates.moulconfig:modern:${project.property("moulconfig_version")}")
 
 }

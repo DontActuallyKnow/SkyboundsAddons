@@ -4,6 +4,12 @@ import java.util.*
 
 object NumberUtils {
 
+    /**
+     * Get decimal value from a roman numeral character
+     *
+     * @param romanChar The input of the roman numeral character
+     * @return The decimal value of the roman numeral
+     */
     private fun getDecimalValue(romanChar: Char): Int {
         return when (romanChar) {
             'I' -> 1
@@ -40,11 +46,11 @@ object NumberUtils {
      */
     fun romanToDecimal(romanNumeral: String?): Int {
         if (romanNumeral.isNullOrEmpty()) return 0
-        val romanNumeral = romanNumeral.trim { it <= ' ' }.uppercase(Locale.getDefault())
+        val romanNumeralTrimmed = romanNumeral.trim { it <= ' ' }.uppercase(Locale.getDefault())
         var decimal = 0
         var lastNumber = 0
-        for (i in romanNumeral.length - 1 downTo 0) {
-            val ch = romanNumeral[i]
+        for (i in romanNumeralTrimmed.length - 1 downTo 0) {
+            val ch = romanNumeralTrimmed[i]
             val number = getDecimalValue(ch)
             if (number == 0) return 0 //Malformed roman numeral
             decimal = if (number >= lastNumber) decimal + number else decimal - number
