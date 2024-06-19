@@ -9,22 +9,24 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.LightmapTextureManager
-import net.minecraft.client.render.VertexConsumerProvider
+import net.minecraft.client.render.*
+import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11
+import java.awt.Color
+import kotlin.math.roundToInt
+
 
 class RenderUtils {
 
     private val MAX_OVERWORLD_BUILD_HEIGHT = 319
 
     private val beaconList = mutableMapOf<BlockPos, FloatArray>()
-    private val cc = Utils().getColorCodeChar()
 
     fun init() {
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register { context ->
@@ -42,11 +44,17 @@ class RenderUtils {
             renderTextAtBlockPos(
                 matrixStack,
                 context.consumers(),
-                Vec3d(0.5, 100.5, 0.5),
+                BlockPos(0, 100, 0),
                 Text.literal(Utils().c("&4T&6e&cs&dt", '&')),
                 context.camera(),
                 true
             )
+
+            val ONE = Vec3d(1.0, 1.0, 1.0)
+            if(MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
+                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, false);
+            }
+
         }
 
     }
@@ -77,65 +85,15 @@ class RenderUtils {
     }
 
     fun renderTextAtBlockPos(
-        matrixStack: MatrixStack,
-        vertexConsumerProvider: VertexConsumerProvider?,
-        pos: BlockPos,
-        text: Text,
-        camera: Camera,
-        seeThroughBlocks: Boolean
+        matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: BlockPos,
+        text: Text, camera: Camera, seeThroughBlocks: Boolean
     ) {
-        val client = MinecraftClient.getInstance()
-        val cameraPos = camera.pos
-
-        val x = (pos.x - cameraPos.x) + 0.5
-        val y = (pos.y - cameraPos.y) + 0.5
-        val z = (pos.z - cameraPos.z) + 0.5
-
-        val rotation = camera.rotation
-
-        matrixStack.push()
-
-        matrixStack.translate(x, y, z)
-
-        matrixStack.multiply(rotation)
-
-        matrixStack.scale(-0.025f, -0.025f, 0.025f)
-
-        val matrix4f: Matrix4f = matrixStack.peek().positionMatrix
-
-        val textRenderer: TextRenderer = client.textRenderer
-        val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
-
-        if (seeThroughBlocks) {
-            RenderSystem.disableDepthTest()
-            RenderSystem.enableBlend()
-            RenderSystem.defaultBlendFunc()
-            RenderSystem.depthMask(false)
-        }
-
-        textRenderer.draw(
-            text.literalString,
-            offset,
-            0f,
-            0,
-            false,
-            matrix4f,
-            vertexConsumerProvider,
-            TextLayerType.NORMAL,
-            0,
-            LightmapTextureManager.MAX_LIGHT_COORDINATE
-        )
-
-        matrixStack.pop()
+        renderTextAtBlockPos(matrixStack, vertexConsumerProvider, Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), text, camera, seeThroughBlocks)
     }
 
     fun renderTextAtBlockPos(
-        matrixStack: MatrixStack,
-        vertexConsumerProvider: VertexConsumerProvider?,
-        pos: Vec3d,
-        text: Text,
-        camera: Camera,
-        seeThroughBlocks: Boolean
+        matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: Vec3d,
+        text: Text, camera: Camera, seeThroughBlocks: Boolean
     ) {
         val client = MinecraftClient.getInstance()
         val cameraPos = camera.pos
@@ -159,12 +117,7 @@ class RenderUtils {
         val textRenderer: TextRenderer = client.textRenderer
         val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
-        if (seeThroughBlocks) {
-            RenderSystem.disableDepthTest()  // Disable depth testing
-            RenderSystem.enableBlend()  // Enable blending
-            RenderSystem.defaultBlendFunc()  // Use the default blend function
-            RenderSystem.depthMask(false)  // Disable depth mask to avoid writing to the depth buffer
-        }
+        RenderSystem.depthFunc(if (seeThroughBlocks) GL11.GL_ALWAYS else GL11.GL_LEQUAL)
 
         textRenderer.draw(
             text.literalString,
@@ -179,13 +132,36 @@ class RenderUtils {
             LightmapTextureManager.MAX_LIGHT_COORDINATE
         )
 
-        if (seeThroughBlocks) {
-            RenderSystem.depthMask(true)  // Re-enable depth mask
-            RenderSystem.enableDepthTest()  // Re-enable depth testing
-            RenderSystem.disableBlend()  // Disable blending
-        }
+        RenderSystem.depthFunc(GL11.GL_LEQUAL)
 
         matrixStack.pop()
+    }
+
+    private fun renderFilled(
+        context: WorldRenderContext,
+        blockPos: BlockPos,
+        dimensions: Vec3d,
+        color: Color,
+        alpha: Float,
+        throughWalls: Boolean
+    ) {
+        val matrices = context.matrixStack()
+        val camera = context.camera().pos
+
+        val pos = Vec3d.of(blockPos)
+
+        matrices.push()
+        matrices.translate(-camera.x, -camera.y, -camera.z)
+
+        val consumers = context.consumers()
+        val buffer = consumers?.getBuffer(RenderLayer.getDebugFilledBox())
+
+        WorldRenderer.renderFilledBox(
+            matrices, buffer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
+            color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
+        )
+
+        matrices.pop()
     }
 
 }
