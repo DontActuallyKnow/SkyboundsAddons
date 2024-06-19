@@ -19,7 +19,6 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.math.roundToInt
 
 
 class RenderUtils {
@@ -51,7 +50,7 @@ class RenderUtils {
             )
 
             val ONE = Vec3d(1.0, 1.0, 1.0)
-            if(MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
+            if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
                 renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, false);
             }
 
@@ -88,7 +87,14 @@ class RenderUtils {
         matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: BlockPos,
         text: Text, camera: Camera, seeThroughBlocks: Boolean
     ) {
-        renderTextAtBlockPos(matrixStack, vertexConsumerProvider, Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), text, camera, seeThroughBlocks)
+        renderTextAtBlockPos(
+            matrixStack,
+            vertexConsumerProvider,
+            Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5),
+            text,
+            camera,
+            seeThroughBlocks
+        )
     }
 
     fun renderTextAtBlockPos(
@@ -154,14 +160,102 @@ class RenderUtils {
         matrices.translate(-camera.x, -camera.y, -camera.z)
 
         val consumers = context.consumers()
-        val buffer = consumers?.getBuffer(RenderLayer.getDebugFilledBox())
+        val renderLayer = RenderLayer.getDebugFilledBox()
+        val vertexConsumer = consumers?.getBuffer(renderLayer)
 
         WorldRenderer.renderFilledBox(
-            matrices, buffer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
+            matrices, vertexConsumer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
             color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
         )
 
         matrices.pop()
+    }
+
+    /* TODO
+    public static void drawBox(MatrixStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1, double x2, double y2, double z2, float red, float green, float blue, float alpha, float xAxisRed, float yAxisGreen, float zAxisBlue) {
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+
+        float f = (float) x1;
+        float g = (float) y1;
+        float h = (float) z1;
+        float i = (float) x2;
+        float j = (float) y2;
+        float k = (float) z2;
+
+        vertexConsumer.vertex(matrix4f, f, g, h).color(red, yAxisGreen, zAxisBlue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, h).color(red, yAxisGreen, zAxisBlue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, g, h).color(xAxisRed, green, zAxisBlue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, h).color(xAxisRed, green, zAxisBlue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, g, h).color(xAxisRed, yAxisGreen, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, g, k).color(xAxisRed, yAxisGreen, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, g, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, g, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
+        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
+    }
+     */
+
+    /**
+     * Converts a BlockPos to a Box (aabb)
+     *
+     * @param pos BlockPos
+     * @return a Box with min and max values
+     */
+    fun convertToBox(pos: BlockPos): Box {
+        val minX = pos.x - 0.5
+        val minY = pos.y - 0.5
+        val minZ = pos.z - 0.5
+        val maxX = pos.x + 0.5
+        val maxY = pos.y + 0.5
+        val maxZ = pos.z + 0.5
+
+        return Box(minX, minY, minZ, maxX, maxY, maxZ)
+    }
+
+    /**
+     * Converts a Box to a BlockPos
+     *
+     * @param box Box
+     * @return a BlockPos with rounded values for x y z
+     */
+    fun convertToBlockPos(box: Box): BlockPos {
+        val centerX = (box.maxX + box.minX) / 2.0
+        val centerY = (box.maxY + box.minY) / 2.0
+        val centerZ = (box.maxZ + box.minZ) / 2.0
+
+        val x = Math.round(centerX).toInt()
+        val y = Math.round(centerY).toInt()
+        val z = Math.round(centerZ).toInt()
+
+        return BlockPos(x, y, z)
+    }
+
+    /**
+     * Convert a BlockPos to Vec3d. Assumes middle of block
+     *
+     * @param pos
+     * @return Vec3d
+     */
+    fun blockPosToVec(pos: BlockPos): Vec3d {
+        val x = pos.x + 0.5
+        val y = pos.y + 0.5
+        val z = pos.z + 0.5
+
+        return Vec3d(x, y, z)
     }
 
 }

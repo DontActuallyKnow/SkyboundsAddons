@@ -1,14 +1,15 @@
 {
-	"required": true,
-	"package": "com.tmiq.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"mixins": [
-
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"client": [
-		"accessors.BeaconBlockEntityRendererInvoker"
-	]
+  "required": true,
+  "package": "com.tmiq.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "accessors.BeaconBlockEntityRendererInvoker",
+    "accessors.FrustumInvoker",
+    "accessors.WorldRendererAccessor"
+  ]
 }
