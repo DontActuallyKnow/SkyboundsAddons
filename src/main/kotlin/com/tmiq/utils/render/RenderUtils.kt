@@ -3,8 +3,10 @@ package com.tmiq.utils.render
 import com.mojang.blaze3d.systems.RenderSystem
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
 import com.tmiq.utils.Utils
+import com.tmiq.utils.render.layers.ESPLayer
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.BlockOutline
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
@@ -13,9 +15,13 @@ import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.shape.VoxelShape
+import org.joml.Matrix3f
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -51,11 +57,9 @@ class RenderUtils {
 
             val ONE = Vec3d(1.0, 1.0, 1.0)
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
-                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, false);
+                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.4f, true, true);
             }
-
         }
-
     }
 
     fun addBeaconToRender(pos: BlockPos, colorComponents: FloatArray) {
@@ -149,8 +153,11 @@ class RenderUtils {
         dimensions: Vec3d,
         color: Color,
         alpha: Float,
+        outline: Boolean,
         throughWalls: Boolean
     ) {
+        if(alpha == 0f) return
+
         val matrices = context.matrixStack()
         val camera = context.camera().pos
 
@@ -167,47 +174,90 @@ class RenderUtils {
             matrices, vertexConsumer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
             color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
         )
+        matrices.pop()
+
+
+        if(outline) {
+            val updatedAlpha = alpha * 1.5f
+            val clampedAlpha = updatedAlpha.coerceIn(0.0f, 1.0f)
+            renderBlockOutline(context, blockPos, color, clampedAlpha, throughWalls)
+        }
+
+    }
+
+    fun renderBlockOutline(
+        context: WorldRenderContext,
+        blockPos: BlockPos,
+        color: Color,
+        alpha: Float,
+        throughWalls: Boolean
+    ) {
+        if(alpha == 0f) return
+
+        // Get the position of the block and the camera
+        val camera = context.camera()
+        val cameraPos: Vec3d = camera.pos
+        val offsetX = blockPos.x - cameraPos.x
+        val offsetY = blockPos.y - cameraPos.y
+        val offsetZ = blockPos.z - cameraPos.z
+
+        // Push the matrix stack
+        val matrices: MatrixStack = context.matrixStack()
+        matrices.push()
+        matrices.translate(offsetX, offsetY, offsetZ)
+
+        // Create a vertex consumer
+        val vertexConsumerProvider: VertexConsumerProvider? = context.consumers()
+        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(RenderLayer.getLines()) // TODO: Add way to make transparent??
+        val matrix4f = matrices.peek().positionMatrix
+        val matrix3f = matrices.peek().normalMatrix
+
+        // Draw the outline for each edge of the block
+
+        val blockOutlineColor = color
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 1f, 0f, 0f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 0f, 1f, 0f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 0f, 0f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 0f, 1f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 1f, 0f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 1f, 1f, 0f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 0f, 0f, 1f, 1f, 0f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 0f, 0f, 1f, 0f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 1f, 0f, 1f, 1f, 0f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 1f, 0f, 0f, 1f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 1f, 1f, 0f, 1f, alpha)
+        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 1f, 0f, 1f, 1f, alpha)
 
         matrices.pop()
     }
 
-    /* TODO
-    public static void drawBox(MatrixStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1, double x2, double y2, double z2, float red, float green, float blue, float alpha, float xAxisRed, float yAxisGreen, float zAxisBlue) {
-        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+    fun drawLine(
+        buffer: VertexConsumer,
+        matrix4f: Matrix4f,
+        matrix3f: Matrix3f,
+        color: Color,
+        startX: Float,
+        startY: Float,
+        startZ: Float,
+        endX: Float,
+        endY: Float,
+        endZ: Float,
+        alpha: Float
+    ) {
 
-        float f = (float) x1;
-        float g = (float) y1;
-        float h = (float) z1;
-        float i = (float) x2;
-        float j = (float) y2;
-        float k = (float) z2;
+        val red = color.red.toFloat()
+        val green =color.green.toFloat()
+        val blue = color.blue.toFloat()
 
-        vertexConsumer.vertex(matrix4f, f, g, h).color(red, yAxisGreen, zAxisBlue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, h).color(red, yAxisGreen, zAxisBlue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, g, h).color(xAxisRed, green, zAxisBlue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, h).color(xAxisRed, green, zAxisBlue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, g, h).color(xAxisRed, yAxisGreen, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, g, k).color(xAxisRed, yAxisGreen, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, g, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, g, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, f, j, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, g, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, h).color(red, green, blue, alpha).next();
-        vertexConsumer.vertex(matrix4f, i, j, k).color(red, green, blue, alpha).next();
+        buffer.vertex(matrix4f, startX, startY, startZ)
+            .color(red, green, blue, alpha)
+            .normal(matrix3f, 0.0f, 1.0f, 0.0f)
+            .next()
+        buffer.vertex(matrix4f, endX, endY, endZ)
+            .color(red, green, blue, alpha)
+            .normal(matrix3f, 0.0f, 1.0f, 0.0f)
+            .next()
     }
-     */
 
     /**
      * Converts a BlockPos to a Box (aabb)
