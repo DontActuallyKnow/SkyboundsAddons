@@ -3,7 +3,6 @@ package com.tmiq.utils.render
 import com.mojang.blaze3d.systems.RenderSystem
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
 import com.tmiq.utils.Utils
-import com.tmiq.utils.render.layers.ESPLayer
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.BlockOutline
