@@ -1,28 +1,23 @@
 package com.tmiq.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
 import com.tmiq.utils.Utils
+import com.tmiq.utils.render.layers.CustomFillLayer
+import com.tmiq.utils.render.layers.CustomLinesLayer
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.BlockOutline
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
-import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShape
 import org.joml.Matrix3f
 import org.joml.Matrix4f
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 
 
@@ -31,11 +26,12 @@ class RenderUtils {
     private val MAX_OVERWORLD_BUILD_HEIGHT = 319
 
     private val beaconList = mutableMapOf<BlockPos, FloatArray>()
+    val ONE = Vec3d(1.0, 1.0, 1.0)
 
     fun init() {
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register { context ->
             beaconList.forEach { (pos, colorComponents) ->
-                renderBeaconBeam(context, pos, colorComponents)
+                renderBeaconBeam(context, pos, Color(100, 0, 100))
             }
         }
 
@@ -54,7 +50,6 @@ class RenderUtils {
                 true
             )
 
-            val ONE = Vec3d(1.0, 1.0, 1.0)
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
                 renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.4f, true, true);
             }
@@ -65,7 +60,18 @@ class RenderUtils {
         if (!beaconList.containsKey(pos)) beaconList[pos] = colorComponents
     }
 
-    private fun renderBeaconBeam(context: WorldRenderContext, pos: BlockPos, colorComponents: FloatArray) {
+    private fun renderBeaconBeam(
+        context: WorldRenderContext,
+        pos: BlockPos,
+        color: Color
+    ) {
+
+        val red = color.red.toFloat()
+        val green = color.green.toFloat()
+        val blue =  color.blue.toFloat()
+
+        val colorComponents = floatArrayOf(red, green, blue)
+
         val matrices = context.matrixStack()
         val camera = context.camera().pos
 
@@ -126,8 +132,6 @@ class RenderUtils {
         val textRenderer: TextRenderer = client.textRenderer
         val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
-        RenderSystem.depthFunc(if (seeThroughBlocks) GL11.GL_ALWAYS else GL11.GL_LEQUAL)
-
         textRenderer.draw(
             text.literalString,
             offset,
@@ -140,8 +144,6 @@ class RenderUtils {
             0,
             LightmapTextureManager.MAX_LIGHT_COORDINATE
         )
-
-        RenderSystem.depthFunc(GL11.GL_LEQUAL)
 
         matrixStack.pop()
     }
@@ -166,13 +168,14 @@ class RenderUtils {
         matrices.translate(-camera.x, -camera.y, -camera.z)
 
         val consumers = context.consumers()
-        val renderLayer = RenderLayer.getDebugFilledBox()
+        val renderLayer = if (throughWalls) CustomFillLayer else RenderLayer.getDebugFilledBox()
         val vertexConsumer = consumers?.getBuffer(renderLayer)
 
         WorldRenderer.renderFilledBox(
             matrices, vertexConsumer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
             color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
         )
+
         matrices.pop()
 
 
@@ -181,7 +184,6 @@ class RenderUtils {
             val clampedAlpha = updatedAlpha.coerceIn(0.0f, 1.0f)
             renderBlockOutline(context, blockPos, color, clampedAlpha, throughWalls)
         }
-
     }
 
     fun renderBlockOutline(
@@ -207,7 +209,8 @@ class RenderUtils {
 
         // Create a vertex consumer
         val vertexConsumerProvider: VertexConsumerProvider? = context.consumers()
-        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(RenderLayer.getLines()) // TODO: Add way to make transparent??
+        val layer = if (throughWalls) CustomLinesLayer else RenderLayer.getLines()
+        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(layer) // TODO: Add way to make transparent??
         val matrix4f = matrices.peek().positionMatrix
         val matrix3f = matrices.peek().normalMatrix
 
@@ -256,6 +259,18 @@ class RenderUtils {
             .color(red, green, blue, alpha)
             .normal(matrix3f, 0.0f, 1.0f, 0.0f)
             .next()
+    }
+
+    fun renderBlockWithBeacon(
+        context: WorldRenderContext,
+        pos: BlockPos,
+        color: Color,
+        alpha: Float,
+        outline: Boolean,
+        throughWalls: Boolean,
+    ) {
+        renderFilled(context, pos, ONE, color, alpha, outline, throughWalls)
+        renderBeaconBeam(context, pos, color)
     }
 
     /**
