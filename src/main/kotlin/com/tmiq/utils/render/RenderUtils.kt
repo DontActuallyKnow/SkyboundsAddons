@@ -1,9 +1,12 @@
 package com.tmiq.utils.render
 
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
+import com.tmiq.utils.NumberUtils.format
+import com.tmiq.utils.TimeUnit
 import com.tmiq.utils.Utils
 import com.tmiq.utils.render.layers.CustomFillLayer
 import com.tmiq.utils.render.layers.CustomLinesLayer
+import com.tmiq.utils.time.TimeMarker
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
@@ -11,7 +14,6 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
-import net.minecraft.client.util.Window
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
@@ -19,9 +21,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix3f
 import org.joml.Matrix4f
-import org.joml.Vector3d
-import org.joml.Vector3f
-import org.joml.Vector4f
 import java.awt.Color
 import java.lang.Math
 
@@ -34,8 +33,9 @@ class RenderUtils {
     val ONE = Vec3d(1.0, 1.0, 1.0)
 
     fun init() {
+        val marker = TimeMarker.now()
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register { context ->
-            beaconList.forEach { (pos, colorComponents) ->
+            beaconList.forEach { (pos, _) ->
                 renderBeaconBeam(context, pos, Color(100, 0, 100))
             }
         }
@@ -46,16 +46,18 @@ class RenderUtils {
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register { context ->
             val matrixStack = context.matrixStack()
+            val passedSince = marker.passedSince()
+            val timeFormat = passedSince.format(TimeUnit.MINUTE)
             renderTextAtBlockPos(
                 matrixStack,
                 context.consumers(),
                 BlockPos(0, 100, 0),
-                Text.literal(Utils().c("&4T&6e&cs&dt", '&')),
+                Text.literal(Utils().c("&4Time since init: &a${timeFormat}", '&')),
                 context.camera()
             )
 
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
-                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.4f, true, false);
+                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, true, false);
             }
 
             renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
@@ -164,6 +166,7 @@ class RenderUtils {
         throughWalls: Boolean
     ) {
         if(alpha == 0f) return
+        if(!throughWalls && !(FrustumUtils().isVisible(convertToBox(blockPos)))) return
 
         val matrices = context.matrixStack()
         val camera = context.camera().pos
@@ -200,6 +203,7 @@ class RenderUtils {
         throughWalls: Boolean
     ) {
         if(alpha == 0f) return
+        if(!throughWalls && !FrustumUtils().isVisible(convertToBox(blockPos))) return
 
         // Get the position of the block and the camera
         val camera = context.camera()
