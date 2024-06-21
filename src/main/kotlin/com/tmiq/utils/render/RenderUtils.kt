@@ -11,6 +11,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
+import net.minecraft.client.util.Window
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
@@ -18,7 +19,11 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+import org.joml.Vector3d
+import org.joml.Vector3f
+import org.joml.Vector4f
 import java.awt.Color
+import java.lang.Math
 
 
 class RenderUtils {
@@ -46,13 +51,15 @@ class RenderUtils {
                 context.consumers(),
                 BlockPos(0, 100, 0),
                 Text.literal(Utils().c("&4T&6e&cs&dt", '&')),
-                context.camera(),
-                true
+                context.camera()
             )
 
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
-                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.4f, true, true);
+                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.4f, true, false);
             }
+
+            renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
+
         }
     }
 
@@ -94,21 +101,20 @@ class RenderUtils {
 
     fun renderTextAtBlockPos(
         matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: BlockPos,
-        text: Text, camera: Camera, seeThroughBlocks: Boolean
+        text: Text, camera: Camera
     ) {
         renderTextAtBlockPos(
             matrixStack,
             vertexConsumerProvider,
             Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5),
             text,
-            camera,
-            seeThroughBlocks
+            camera
         )
     }
 
     fun renderTextAtBlockPos(
         matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: Vec3d,
-        text: Text, camera: Camera, seeThroughBlocks: Boolean
+        text: Text, camera: Camera
     ) {
         val client = MinecraftClient.getInstance()
         val cameraPos = camera.pos

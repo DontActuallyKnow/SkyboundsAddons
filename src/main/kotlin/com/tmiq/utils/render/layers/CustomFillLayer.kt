@@ -17,7 +17,8 @@ object CustomFillLayer : RenderLayer(
     true,
     {
         RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
+        //RenderSystem.defaultBlendFunc()
+        RenderSystem.blendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA)
         RenderSystem.enableDepthTest()
         RenderSystem.setShader(GameRenderer::getPositionColorProgram)
         RenderSystem.depthFunc(GL30.GL_ALWAYS)
