@@ -15,20 +15,20 @@ object CustomLinesLayer : RenderLayer(
     false,
     true,
     {
-        RenderSystem.lineWidth(3f)
+        RenderSystem.lineWidth(1.5f)
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
         RenderSystem.disableCull()
         RenderSystem.enableDepthTest()
-        RenderSystem.depthMask(false)
-        RenderSystem.depthFunc(GL30.GL_ALWAYS)
+        //RenderSystem.depthMask(false)
         RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram)
+        RenderSystem.depthFunc(GL30.GL_ALWAYS)
     },
     {
         RenderSystem.enableDepthTest()
         RenderSystem.enableCull()
         RenderSystem.disableBlend()
-        RenderSystem.depthMask(true)
+        //RenderSystem.depthMask(true)
         RenderSystem.depthFunc(GL30.GL_LEQUAL)
         RenderSystem.lineWidth(1f)
     }
