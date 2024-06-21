@@ -36,7 +36,7 @@ class RenderUtils {
         val marker = TimeMarker.now()
         WorldRenderEvents.BEFORE_DEBUG_RENDER.register { context ->
             beaconList.forEach { (pos, _) ->
-                renderBeaconBeam(context, pos, Color(100, 0, 100))
+                renderBeaconBeam(context, pos, Color(100, 0, 100), false)
             }
         }
 
@@ -52,12 +52,12 @@ class RenderUtils {
                 matrixStack,
                 context.consumers(),
                 BlockPos(0, 100, 0),
-                Text.literal(Utils().c("&4Time since init: &a${timeFormat}", '&')),
+                Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')),
                 context.camera()
             )
 
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
-                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, true, false);
+                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, true, true);
             }
 
             renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
@@ -72,9 +72,10 @@ class RenderUtils {
     private fun renderBeaconBeam(
         context: WorldRenderContext,
         pos: BlockPos,
-        color: Color
+        color: Color,
+        throughWalls: Boolean
     ) {
-
+        if(!throughWalls && !FrustumUtils().isVisible(convertToBox(pos))) return
         val red = color.red.toFloat()
         val green = color.green.toFloat()
         val blue =  color.blue.toFloat()
@@ -118,6 +119,8 @@ class RenderUtils {
         matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: Vec3d,
         text: Text, camera: Camera
     ) {
+
+        if(!FrustumUtils().isVisible(convertToBox(vecToBlockPos(pos)))) return
         val client = MinecraftClient.getInstance()
         val cameraPos = camera.pos
 
@@ -280,7 +283,7 @@ class RenderUtils {
         throughWalls: Boolean,
     ) {
         renderFilled(context, pos, ONE, color, alpha, outline, throughWalls)
-        renderBeaconBeam(context, pos, color)
+        renderBeaconBeam(context, pos, color, throughWalls)
     }
 
     /**
@@ -330,6 +333,20 @@ class RenderUtils {
         val z = pos.z + 0.5
 
         return Vec3d(x, y, z)
+    }
+
+    /**
+     * Convert a Vec3d to BlockPos. Rounds down to the nearest block coordinates.
+     *
+     * @param vec
+     * @return BlockPos
+     */
+    fun vecToBlockPos(vec: Vec3d): BlockPos {
+        val x = vec.x.toInt()
+        val y = vec.y.toInt()
+        val z = vec.z.toInt()
+
+        return BlockPos(x, y, z)
     }
 
 }

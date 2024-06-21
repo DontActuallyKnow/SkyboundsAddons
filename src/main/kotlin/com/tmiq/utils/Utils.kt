@@ -6,7 +6,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 
-class Utils {
+object Utils {
 
     /**
      * Returns the color code character
