@@ -179,7 +179,7 @@ object RenderUtils {
 
         val distance = cameraPos.distanceTo(Vec3d(pos.getX(), pos.getY(), pos.getZ()))
 
-        val adjustedScale = ((scale * distance.coerceIn(0.0, maxDistance)) * 0.01f).toFloat() // Change the maxDistance to any value which specifies maximum metres
+        val adjustedScale = ((scale * distance.coerceIn(5.0, maxDistance)) * 0.01f).toFloat() // Change the maxDistance to any value which specifies maximum metres
 
         positionMatrix
             .translate(

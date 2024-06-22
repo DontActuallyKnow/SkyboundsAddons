@@ -32,7 +32,7 @@ class SkyboundsaddonsCommand {
                     }
 
                     val myWaypoint = Waypoint(Text.literal("§aHello"), BlockPos(6, 99, 0), Color(158, 77, 179), 0.5f,
-                        true, true, 50.0)
+                        false, true, 50.0)
                     if(inside) {
                         WaypointHandler.removeWaypoint(myWaypoint)
                         //WaypointHandler.clearWaypoints()

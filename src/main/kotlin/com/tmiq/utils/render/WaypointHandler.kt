@@ -15,7 +15,7 @@ object WaypointHandler {
             for (waypoint in waypoints) {
                 RenderUtils.renderBoxWithBeam(context, waypoint.pos, waypoint.color, waypoint.alpha, waypoint.throughWalls, true)
                 if (waypoint.displayDistance) {
-                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), 1f, 0f, waypoint.throughWalls, waypoint.maxDistanceScaling)
+                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), 1f, 0f, true, waypoint.maxDistanceScaling)
                 }
             }
         }
