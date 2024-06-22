@@ -153,7 +153,14 @@ object RenderUtils {
 
 
     fun renderWaypointText(
-        context: WorldRenderContext, title: Text, pos: Vec3d, scale: Float, yOffset: Float, throughWalls: Boolean, maxDistance: Double
+        context: WorldRenderContext,
+        title: Text,
+        pos: Vec3d,
+        scale: Float,
+        yOffset: Float,
+        throughWalls: Boolean,
+        maxDistance: Double,
+        distanceColor: Char
     ) {
         val positionMatrix = Matrix4f()
         val camera = context.camera()
@@ -179,7 +186,10 @@ object RenderUtils {
 
         val distance = cameraPos.distanceTo(Vec3d(pos.getX(), pos.getY(), pos.getZ()))
 
-        val adjustedScale = ((scale * distance.coerceIn(5.0, maxDistance)) * 0.01f).toFloat() // Change the maxDistance to any value which specifies maximum metres
+        val adjustedScale = ((scale * distance.coerceIn(
+            5.0,
+            maxDistance
+        )) * 0.01f).toFloat() // Change the maxDistance to any value which specifies maximum metres
 
         positionMatrix
             .translate(
@@ -192,7 +202,7 @@ object RenderUtils {
         val xOffsetDistance = -textRenderer.getWidth("${distanceRounded}m") / 2f
         val xOffsetTitle = -textRenderer.getWidth(title) / 2f
 
-        val distanceText = Text.literal(Utils.c("&2${distanceRounded}m", '&'))
+        var distanceText = Text.literal(Utils.c("&${distanceColor}${distanceRounded}m", '&'))
 
         val tessellator = RenderSystem.renderThreadTesselator()
         val buffer = tessellator.buffer
@@ -201,11 +211,21 @@ object RenderUtils {
         RenderSystem.depthFunc(if (throughWalls) GL11.GL_ALWAYS else GL11.GL_LEQUAL)
         val textLayerType = if (throughWalls) TextLayerType.SEE_THROUGH else TextLayerType.NORMAL
         positionMatrix.scale(0.7f)
+
+        var title = title
+
+        if (distance > (maxDistance + ((maxDistance * 0.7) * scale))) { // if player is so far it cant be read
+            title = Text.literal("")
+            distanceText = Text.literal("")
+        }
+
+        var titleOffsetY = if (distance > 5) 9f else 0f
+
         // Title
         textRenderer.draw(
             title,
             xOffsetTitle,
-            -9f,
+            -titleOffsetY,
             -0x1,
             false,
             positionMatrix,
@@ -216,20 +236,22 @@ object RenderUtils {
         )
 
         positionMatrix.scale(0.7f)
-        // Distance
-        textRenderer.draw(
-            distanceText,
-            xOffsetDistance,
-            yOffset,
-            -0x1,
-            false,
-            positionMatrix,
-            consumers,
-            textLayerType,
-            0,
-            LightmapTextureManager.MAX_LIGHT_COORDINATE
-        )
 
+        if (distance > 5) {
+            // Distance
+            textRenderer.draw(
+                distanceText,
+                xOffsetDistance,
+                yOffset,
+                -0x1,
+                false,
+                positionMatrix,
+                consumers,
+                textLayerType,
+                0,
+                LightmapTextureManager.MAX_LIGHT_COORDINATE
+            )
+        }
 
 
         consumers.draw()
@@ -242,7 +264,7 @@ object RenderUtils {
         context: WorldRenderContext, pos: BlockPos, color: Color, alpha: Float, throughWalls: Boolean, outline: Boolean
     ) {
         renderFilled(context, pos, color, alpha, throughWalls)
-        if(outline) {
+        if (outline) {
             val updatedAlpha = alpha * 1.5f
             val clampedAlpha = updatedAlpha.coerceIn(0.0f, 1.0f)
             renderOutline(context, pos, color, 2.5f, clampedAlpha, throughWalls)
@@ -260,7 +282,7 @@ object RenderUtils {
         context: WorldRenderContext, pos: Vec3d, dimensions: Vec3d, color: Color, alpha: Float, throughWalls: Boolean
     ) {
 
-        if(!throughWalls && !isVisible(Box.from(pos))) return
+        if (!throughWalls && !isVisible(Box.from(pos))) return
         val matrices = context.matrixStack()
         val camera = context.camera().pos
 
@@ -269,7 +291,8 @@ object RenderUtils {
 
         val consumers = context.consumers()
 
-        val buffer = if (throughWalls) consumers?.getBuffer(FilledThroughWallsRenderLayer) else consumers?.getBuffer(RenderLayer.getDebugFilledBox())
+        val buffer =
+            if (throughWalls) consumers?.getBuffer(FilledThroughWallsRenderLayer) else consumers?.getBuffer(RenderLayer.getDebugFilledBox())
 
         val red = (color.red / 255F).coerceIn(0.0f, 1.0f)
         val green = (color.green / 255F).coerceIn(0.0f, 1.0f)
@@ -277,7 +300,8 @@ object RenderUtils {
 
         WorldRenderer.renderFilledBox(
             matrices, buffer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
-            red, green, blue, alpha)
+            red, green, blue, alpha
+        )
 
         matrices?.pop()
     }
@@ -461,5 +485,4 @@ object RenderUtils {
 
         return BlockPos(x, y, z)
     }
-
 }

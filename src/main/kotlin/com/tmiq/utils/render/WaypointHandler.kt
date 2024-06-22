@@ -15,7 +15,7 @@ object WaypointHandler {
             for (waypoint in waypoints) {
                 RenderUtils.renderBoxWithBeam(context, waypoint.pos, waypoint.color, waypoint.alpha, waypoint.throughWalls, true)
                 if (waypoint.displayDistance) {
-                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), 1f, 0f, true, waypoint.maxDistanceScaling)
+                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), waypoint.scale, 0f, true, waypoint.maxDistanceScaling, waypoint.distanceColor)
                 }
             }
         }
@@ -44,7 +44,9 @@ data class Waypoint (
     var alpha: Float,
     var throughWalls: Boolean,
     var displayDistance: Boolean,
-    var maxDistanceScaling: Double
+    var distanceColor: Char,
+    var maxDistanceScaling: Double,
+    var scale: Float
 ) {
 
     fun getVec3d(): Vec3d {
