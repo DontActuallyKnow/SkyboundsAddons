@@ -18,9 +18,9 @@ repositories {
 		url = uri("https://maven.notenoughupdates.org/releases/")
 	}
 
-	//maven {
-	//	url = uri("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-	//}
+	maven {
+		url = uri("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
+	}
 
 }
 
@@ -43,7 +43,7 @@ dependencies {
 	include("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 	shadowImpl("org.notenoughupdates.moulconfig:modern:${project.property("moulconfig_version")}")
 
-	//"modRuntimeOnly"("me.djtheredstoner:DevAuth-fabric:1.2.1")
+	modRuntimeOnly("me.djtheredstoner:DevAuth-fabric:1.2.1")
 
 }
 

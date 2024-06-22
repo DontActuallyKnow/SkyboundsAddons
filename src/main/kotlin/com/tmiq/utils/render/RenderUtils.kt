@@ -39,13 +39,13 @@ object RenderUtils {
             val passedSince = marker.passedSince()
             val timeFormat = passedSince.format(TimeUnit.MINUTE)
 
-            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), false)
+            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
 
             renderOutline(context, BlockPos(1, 100, 1), Color(100, 0, 100), 5f, 1f, false)
 
-            renderBox(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.3f, false, true)
+            renderBox(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.3f, true, true)
 
-            renderBoxWithBeam(context, BlockPos(4, 99, 0), Color(201, 160, 220), 0.5f, false, true)
+            renderBoxWithBeam(context, BlockPos(4, 99, 0), Color(201, 0, 220), 0.5f, false, true)
 
         }
     }
@@ -172,8 +172,7 @@ object RenderUtils {
 
         WorldRenderer.renderFilledBox(
             matrices, buffer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
-            color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
-        )
+            color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha)
 
         matrices.pop()
     }
