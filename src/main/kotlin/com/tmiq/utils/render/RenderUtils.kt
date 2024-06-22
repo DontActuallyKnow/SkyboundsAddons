@@ -63,6 +63,7 @@ class RenderUtils {
             renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
 
         }
+
     }
 
     fun addBeaconToRender(pos: BlockPos, colorComponents: FloatArray) {
@@ -151,7 +152,7 @@ class RenderUtils {
             false,
             matrix4f,
             vertexConsumerProvider,
-            TextLayerType.NORMAL,
+            TextLayerType.SEE_THROUGH,
             0,
             LightmapTextureManager.MAX_LIGHT_COORDINATE
         )
@@ -223,7 +224,7 @@ class RenderUtils {
         // Create a vertex consumer
         val vertexConsumerProvider: VertexConsumerProvider? = context.consumers()
         val layer = if (throughWalls) CustomLinesLayer else RenderLayer.getLines()
-        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(layer) // TODO: Add way to make transparent??
+        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(layer)
         val matrix4f = matrices.peek().positionMatrix
         val matrix3f = matrices.peek().normalMatrix
 
