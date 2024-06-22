@@ -12,6 +12,7 @@ import com.tmiq.utils.time.TimeMarker
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
+import net.minecraft.block.Block
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
@@ -27,43 +28,31 @@ import java.awt.Color
 
 object RenderUtils {
 
-    private val MAX_OVERWORLD_BUILD_HEIGHT = 319
-
-    private val beaconList = mutableMapOf<BlockPos, FloatArray>()
-    val ONE = Vec3d(1.0, 1.0, 1.0)
+    private const val MAX_OVERWORLD_BUILD_HEIGHT = 319
+    private val ONE = Vec3d(1.0, 1.0, 1.0)
 
     fun init() {
         val marker = TimeMarker.now()
-        WorldRenderEvents.BEFORE_DEBUG_RENDER.register { context ->
-            beaconList.forEach { (pos, _) ->
-                renderBeaconBeam(context, pos, Color(100, 0, 100), false)
-            }
-        }
-
-        ServerWorldEvents.UNLOAD.register { _, _ ->
-            beaconList.clear()
-        }
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register { context ->
 
             val passedSince = marker.passedSince()
             val timeFormat = passedSince.format(TimeUnit.MINUTE)
 
-            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
+            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), false)
 
             renderOutline(context, BlockPos(1, 100, 1), Color(100, 0, 100), 5f, 1f, false)
 
-            renderBox(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, false, true)
+            renderBox(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.3f, false, true)
+
+            renderBoxWithBeam(context, BlockPos(4, 99, 0), Color(201, 160, 220), 0.5f, false, true)
 
         }
     }
 
-    fun addBeaconToRender(pos: BlockPos, colorComponents: FloatArray) {
-        if (!beaconList.containsKey(pos)) beaconList[pos] = colorComponents
-    }
 
     private fun renderBeaconBeam(
-        context: WorldRenderContext, pos: BlockPos, color: Color, throughWalls: Boolean
+        context: WorldRenderContext, pos: BlockPos, color: Color
     ) {
         val red = color.red.toFloat()
         val green = color.green.toFloat()
@@ -88,6 +77,15 @@ object RenderUtils {
         )
 
         matrices.pop()
+    }
+
+
+    fun renderBoxWithBeam(
+        context: WorldRenderContext, pos: BlockPos, color: Color, alpha: Float, throughWalls: Boolean, outline: Boolean
+    ) {
+        renderBox(context, pos, color, alpha, throughWalls, outline)
+        val beaconPos = BlockPos(pos.x, pos.y + 1, pos.z)
+        renderBeaconBeam(context, beaconPos, color)
     }
 
 
@@ -160,6 +158,8 @@ object RenderUtils {
     private fun renderFilled(
         context: WorldRenderContext, pos: Vec3d, dimensions: Vec3d, color: Color, alpha: Float, throughWalls: Boolean
     ) {
+
+        if(!throughWalls && !isVisible(Box.from(pos))) return
         val matrices = context.matrixStack()
         val camera = context.camera().pos
 
@@ -168,10 +168,10 @@ object RenderUtils {
 
         val consumers = context.consumers()
 
-        val buffer = if (throughWalls) FilledThroughWallsRenderLayer else FilledRenderLayer
+        val buffer = if (throughWalls) consumers?.getBuffer(FilledThroughWallsRenderLayer) else consumers?.getBuffer(RenderLayer.getDebugFilledBox())
 
         WorldRenderer.renderFilledBox(
-            matrices, consumers?.getBuffer(buffer), pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
+            matrices, buffer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
             color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
         )
 
