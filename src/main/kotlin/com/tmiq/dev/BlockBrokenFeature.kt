@@ -5,17 +5,15 @@ import com.tmiq.utils.TimeUnit
 import com.tmiq.utils.Utils
 import com.tmiq.utils.render.RenderUtils
 import com.tmiq.utils.time.TimeMarker
-import com.tmiq.utils.time.Timer
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import net.minecraft.text.Text
-import net.minecraft.util.ActionResult
 import net.minecraft.util.math.BlockPos
-import javax.management.timer.TimerMBean
 
 class BlockBrokenFeature {
 
-    var blocksBroken = mutableMapOf<BlockPos, TimeMarker>()
+    private var blocksBroken = mutableMapOf<BlockPos, TimeMarker>()
+
 
     fun init() {
         blocksBroken.clear()
@@ -42,8 +40,6 @@ class BlockBrokenFeature {
                     false
                 )
             }
-
-
         }
 
     }

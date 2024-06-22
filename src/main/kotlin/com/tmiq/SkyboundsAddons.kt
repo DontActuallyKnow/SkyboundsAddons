@@ -3,6 +3,7 @@ package com.tmiq
 import com.tmiq.commands.SkyboundsaddonsCommand
 import com.tmiq.dev.BlockBrokenFeature
 import com.tmiq.utils.render.RenderUtils
+import com.tmiq.utils.render.WaypointHandler
 import net.fabricmc.api.ModInitializer
 
 class SkyboundsAddons : ModInitializer {
@@ -12,6 +13,8 @@ class SkyboundsAddons : ModInitializer {
 		println("SkyboundsAddons initialized!")
 
 		SkyboundsaddonsCommand().init()
+
+		WaypointHandler.init()
 		RenderUtils.init()
 		BlockBrokenFeature().init()
 	}

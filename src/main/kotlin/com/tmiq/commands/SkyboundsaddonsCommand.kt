@@ -1,12 +1,18 @@
 package com.tmiq.commands
 
+import com.tmiq.utils.render.Waypoint
+import com.tmiq.utils.render.WaypointHandler
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.minecraft.client.MinecraftClient
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import net.minecraft.util.math.BlockPos
+import java.awt.Color
 
 class SkyboundsaddonsCommand {
+
+    var inside = false
 
     //TODO: Implement MoulConfig after port
     fun init() {
@@ -23,6 +29,17 @@ class SkyboundsaddonsCommand {
 
                     val message = Text.literal("§aHello").styled { style ->
                         style.withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("§cwhatever")))
+                    }
+
+                    val myWaypoint = Waypoint(Text.literal("§aHello"), BlockPos(6, 99, 0), Color(158, 77, 179), 0.5f,
+                        true, true, 50.0)
+                    if(inside) {
+                        WaypointHandler.removeWaypoint(myWaypoint)
+                        //WaypointHandler.clearWaypoints()
+                        inside = !inside
+                    } else {
+                        WaypointHandler.addWaypoint(myWaypoint)
+                        inside = !inside
                     }
 
                     MinecraftClient.getInstance().inGameHud.chatHud.addMessage(message)

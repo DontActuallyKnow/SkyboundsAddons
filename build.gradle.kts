@@ -1,5 +1,5 @@
 plugins {
-	id("fabric-loom") version "1.6-SNAPSHOT"
+	id("fabric-loom") version "1.7-SNAPSHOT"
 	id("maven-publish")
 	id("org.jetbrains.kotlin.jvm") version "2.0.0"
 	id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -57,12 +57,12 @@ tasks.processResources {
 }
 
 tasks.withType<JavaCompile> {
-	options.release.set(17)
+	options.release.set(21)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 	kotlinOptions {
-		jvmTarget = "17"
+		jvmTarget = "21"
 	}
 }
 
@@ -78,8 +78,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 tasks.jar {
