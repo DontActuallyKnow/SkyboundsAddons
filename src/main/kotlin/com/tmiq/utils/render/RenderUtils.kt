@@ -5,8 +5,9 @@ import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
 import com.tmiq.utils.NumberUtils.format
 import com.tmiq.utils.TimeUnit
 import com.tmiq.utils.Utils
-import com.tmiq.utils.render.layers.CustomFillLayer
-import com.tmiq.utils.render.layers.CustomLinesLayer
+import com.tmiq.utils.render.FrustumUtils.isVisible
+import com.tmiq.utils.render.layers.FilledRenderLayer
+import com.tmiq.utils.render.layers.FilledThroughWallsRenderLayer
 import com.tmiq.utils.time.TimeMarker
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
@@ -15,14 +16,11 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.text.OrderedText
+import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import org.joml.Matrix3f
-import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -51,15 +49,13 @@ object RenderUtils {
             val passedSince = marker.passedSince()
             val timeFormat = passedSince.format(TimeUnit.MINUTE)
 
-            if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
-                renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, true, true);
-            }
-
-            renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
-
             renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
-        }
 
+            renderOutline(context, BlockPos(1, 100, 1), Color(100, 0, 100), 5f, 1f, false)
+
+            renderBox(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, false, true)
+
+        }
     }
 
     fun addBeaconToRender(pos: BlockPos, colorComponents: FloatArray) {
@@ -67,12 +63,8 @@ object RenderUtils {
     }
 
     private fun renderBeaconBeam(
-        context: WorldRenderContext,
-        pos: BlockPos,
-        color: Color,
-        throughWalls: Boolean
+        context: WorldRenderContext, pos: BlockPos, color: Color, throughWalls: Boolean
     ) {
-        if(!throughWalls && !FrustumUtils.isVisible(convertToBox(pos))) return
         val red = color.red.toFloat()
         val green = color.green.toFloat()
         val blue =  color.blue.toFloat()
@@ -98,6 +90,7 @@ object RenderUtils {
         matrices.pop()
     }
 
+
     fun renderText(
         context: WorldRenderContext, text: Text, pos: BlockPos, throughWalls: Boolean
     ) {
@@ -107,7 +100,7 @@ object RenderUtils {
     fun renderText(
         context: WorldRenderContext, text: Text, pos: BlockPos, scale: Float, throughWalls: Boolean
     ) {
-        renderText(context, text, blockPosToVec(pos), scale, 0f, throughWalls)
+        renderText(context, text, blockPosToCenterVec(pos), scale, 0f, throughWalls)
     }
 
     fun renderText(
@@ -145,131 +138,79 @@ object RenderUtils {
         matrices.pop()
     }
 
-    private fun renderFilled(
-        context: WorldRenderContext,
-        blockPos: BlockPos,
-        dimensions: Vec3d,
-        color: Color,
-        alpha: Float,
-        outline: Boolean,
-        throughWalls: Boolean
-    ) {
-        if(alpha == 0f) return
-        if(!throughWalls && !(FrustumUtils.isVisible(convertToBox(blockPos)))) return
 
+    fun renderBox(
+        context: WorldRenderContext, pos: BlockPos, color: Color, alpha: Float, throughWalls: Boolean, outline: Boolean
+    ) {
+        renderFilled(context, pos, color, alpha, throughWalls)
+        if(outline) {
+            val updatedAlpha = alpha * 1.5f
+            val clampedAlpha = updatedAlpha.coerceIn(0.0f, 1.0f)
+            renderOutline(context, pos, color, 2.5f, clampedAlpha, throughWalls)
+        }
+    }
+
+
+    fun renderFilled(
+        context: WorldRenderContext, pos: BlockPos, color: Color, alpha: Float, throughWalls: Boolean
+    ) {
+        renderFilled(context, blockPosToVec(pos), ONE, color, alpha, throughWalls)
+    }
+
+    private fun renderFilled(
+        context: WorldRenderContext, pos: Vec3d, dimensions: Vec3d, color: Color, alpha: Float, throughWalls: Boolean
+    ) {
         val matrices = context.matrixStack()
         val camera = context.camera().pos
-
-        val pos = Vec3d.of(blockPos)
 
         matrices.push()
         matrices.translate(-camera.x, -camera.y, -camera.z)
 
         val consumers = context.consumers()
-        val renderLayer = if (throughWalls) CustomFillLayer else RenderLayer.getDebugFilledBox()
-        val vertexConsumer = consumers?.getBuffer(renderLayer)
+
+        val buffer = if (throughWalls) FilledThroughWallsRenderLayer else FilledRenderLayer
 
         WorldRenderer.renderFilledBox(
-            matrices, vertexConsumer, pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
+            matrices, consumers?.getBuffer(buffer), pos.x, pos.y, pos.z, pos.x + dimensions.x, pos.y + dimensions.y, pos.z + dimensions.z,
             color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
         )
 
         matrices.pop()
-
-
-        if(outline) {
-            val updatedAlpha = alpha * 1.5f
-            val clampedAlpha = updatedAlpha.coerceIn(0.0f, 1.0f)
-            renderBlockOutline(context, blockPos, color, clampedAlpha, throughWalls)
-        }
     }
 
-    fun renderBlockOutline(
-        context: WorldRenderContext,
-        blockPos: BlockPos,
-        color: Color,
-        alpha: Float,
-        throughWalls: Boolean
+
+    fun renderOutline(
+        context: WorldRenderContext, pos: BlockPos, color: Color, lineWidth: Float, alpha: Float, throughWalls: Boolean
     ) {
-        if(alpha == 0f) return
-        if(!throughWalls && !FrustumUtils.isVisible(convertToBox(blockPos))) return
+        val box = blockPosToBox(pos)
 
-        // Get the position of the block and the camera
-        val camera = context.camera()
-        val cameraPos: Vec3d = camera.pos
-        val offsetX = blockPos.x - cameraPos.x
-        val offsetY = blockPos.y - cameraPos.y
-        val offsetZ = blockPos.z - cameraPos.z
+        val matrices = context.matrixStack()
+        val camera = context.camera().pos
+        val tessellator = RenderSystem.renderThreadTesselator().buffer
 
-        // Push the matrix stack
-        val matrices: MatrixStack = context.matrixStack()
+        RenderSystem.setShader { GameRenderer.getRenderTypeLinesProgram() }
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
+        RenderSystem.lineWidth(lineWidth)
+        RenderSystem.disableCull()
+        RenderSystem.enableDepthTest()
+        RenderSystem.depthFunc(if (throughWalls) GL11.GL_ALWAYS else GL11.GL_LEQUAL)
+
         matrices.push()
-        matrices.translate(offsetX, offsetY, offsetZ)
+        matrices.translate(-camera.getX(), -camera.getY(), -camera.getZ())
 
-        // Create a vertex consumer
-        val vertexConsumerProvider: VertexConsumerProvider? = context.consumers()
-        val layer = if (throughWalls) CustomLinesLayer else RenderLayer.getLines()
-        val buffer: VertexConsumer = vertexConsumerProvider!!.getBuffer(layer)
-        val matrix4f = matrices.peek().positionMatrix
-        val matrix3f = matrices.peek().normalMatrix
-
-        // Draw the outline for each edge of the block
-
-        val blockOutlineColor = color
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 1f, 0f, 0f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 0f, 1f, 0f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 0f, 0f, 0f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 0f, 1f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 1f, 0f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 1f, 1f, 1f, 1f, 0f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 0f, 0f, 1f, 1f, 0f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 1f, 0f, 0f, 1f, 0f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 1f, 0f, 1f, 1f, 0f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 1f, 0f, 0f, 1f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 1f, 1f, 0f, 1f, alpha)
-        drawLine(buffer, matrix4f, matrix3f, blockOutlineColor, 0f, 0f, 1f, 0f, 1f, 1f, alpha)
+        val buffer = tessellator.begin(DrawMode.LINES, VertexFormats.LINES)
+        WorldRenderer.drawBox(
+            matrices, tessellator, box,
+            color.red.toFloat(), color.green.toFloat(), color.blue.toFloat(), alpha
+        )
+        BufferRenderer.drawWithGlobalProgram(tessellator.end())
 
         matrices.pop()
-    }
+        RenderSystem.lineWidth(1f)
+        RenderSystem.enableCull()
+        RenderSystem.disableDepthTest()
+        RenderSystem.depthFunc(GL11.GL_LEQUAL)
 
-    fun drawLine(
-        buffer: VertexConsumer,
-        matrix4f: Matrix4f,
-        matrix3f: Matrix3f,
-        color: Color,
-        startX: Float,
-        startY: Float,
-        startZ: Float,
-        endX: Float,
-        endY: Float,
-        endZ: Float,
-        alpha: Float
-    ) {
-
-        val red = color.red.toFloat()
-        val green =color.green.toFloat()
-        val blue = color.blue.toFloat()
-
-        buffer.vertex(matrix4f, startX, startY, startZ)
-            .color(red, green, blue, alpha)
-            .normal(matrix3f, 0.0f, 1.0f, 0.0f)
-            .next()
-        buffer.vertex(matrix4f, endX, endY, endZ)
-            .color(red, green, blue, alpha)
-            .normal(matrix3f, 0.0f, 1.0f, 0.0f)
-            .next()
-    }
-
-    fun renderBlockWithBeacon(
-        context: WorldRenderContext,
-        pos: BlockPos,
-        color: Color,
-        alpha: Float,
-        outline: Boolean,
-        throughWalls: Boolean,
-    ) {
-        renderFilled(context, pos, ONE, color, alpha, outline, throughWalls)
-        renderBeaconBeam(context, pos, color, throughWalls)
     }
 
     /**
@@ -278,7 +219,18 @@ object RenderUtils {
      * @param pos BlockPos
      * @return a Box with min and max values
      */
-    fun convertToBox(pos: BlockPos): Box {
+    fun blockPosToBox(pos: BlockPos): Box {
+        val minX = pos.x// - 0.5
+        val minY = pos.y// - 0.5
+        val minZ = pos.z// - 0.5
+        val maxX = pos.x + 1
+        val maxY = pos.y + 1
+        val maxZ = pos.z + 1
+
+        return Box(minX.toDouble(), minY.toDouble(), minZ.toDouble(), maxX.toDouble(), maxY.toDouble(), maxZ.toDouble())
+    }
+
+    fun blockPosToBoxCenter(pos: BlockPos): Box {
         val minX = pos.x - 0.5
         val minY = pos.y - 0.5
         val minZ = pos.z - 0.5
@@ -286,7 +238,7 @@ object RenderUtils {
         val maxY = pos.y + 0.5
         val maxZ = pos.z + 0.5
 
-        return Box(minX, minY, minZ, maxX, maxY, maxZ)
+        return Box(minX.toDouble(), minY.toDouble(), minZ.toDouble(), maxX.toDouble(), maxY.toDouble(), maxZ.toDouble())
     }
 
     /**
@@ -295,7 +247,7 @@ object RenderUtils {
      * @param box Box
      * @return a BlockPos with rounded values for x y z
      */
-    fun convertToBlockPos(box: Box): BlockPos {
+    fun boxToBlockPos(box: Box): BlockPos {
         val centerX = (box.maxX + box.minX) / 2.0
         val centerY = (box.maxY + box.minY) / 2.0
         val centerZ = (box.maxZ + box.minZ) / 2.0
@@ -314,11 +266,19 @@ object RenderUtils {
      * @return Vec3d
      */
     fun blockPosToVec(pos: BlockPos): Vec3d {
+        val x = pos.x
+        val y = pos.y
+        val z = pos.z
+
+        return Vec3d(x.toDouble(), y.toDouble(), z.toDouble())
+    }
+
+    fun blockPosToCenterVec(pos: BlockPos): Vec3d {
         val x = pos.x + 0.5
         val y = pos.y + 0.5
         val z = pos.z + 0.5
 
-        return Vec3d(x, y, z)
+        return Vec3d(x.toDouble(), y.toDouble(), z.toDouble())
     }
 
     /**
