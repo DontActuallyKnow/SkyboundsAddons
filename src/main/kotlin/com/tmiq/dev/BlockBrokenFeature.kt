@@ -35,12 +35,11 @@ class BlockBrokenFeature {
                 val time = block.value.passedSince()
                 val formattedTime = time.format(TimeUnit.MINUTE)
 
-                RenderUtils().renderTextAtBlockPos(
-                    context.matrixStack(),
-                    context.consumers(),
-                    block.key,
+                RenderUtils.renderText(
+                    context,
                     Text.literal(Utils.c("&4${formattedTime}", '&')),
-                    context.camera()
+                    block.key,
+                    false
                 )
             }
 

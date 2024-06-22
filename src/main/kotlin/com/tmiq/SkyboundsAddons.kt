@@ -12,7 +12,7 @@ class SkyboundsAddons : ModInitializer {
 		println("SkyboundsAddons initialized!")
 
 		SkyboundsaddonsCommand().init()
-		RenderUtils().init()
+		RenderUtils.init()
 		BlockBrokenFeature().init()
 	}
 

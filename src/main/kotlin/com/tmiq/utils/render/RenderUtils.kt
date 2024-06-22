@@ -1,5 +1,6 @@
 package com.tmiq.utils.render
 
+import com.mojang.blaze3d.systems.RenderSystem
 import com.tmiq.mixin.accessors.BeaconBlockEntityRendererInvoker
 import com.tmiq.utils.NumberUtils.format
 import com.tmiq.utils.TimeUnit
@@ -15,17 +16,18 @@ import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.lang.Math
 
 
-class RenderUtils {
+object RenderUtils {
 
     private val MAX_OVERWORLD_BUILD_HEIGHT = 319
 
@@ -45,16 +47,9 @@ class RenderUtils {
         }
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register { context ->
-            val matrixStack = context.matrixStack()
+
             val passedSince = marker.passedSince()
             val timeFormat = passedSince.format(TimeUnit.MINUTE)
-            renderTextAtBlockPos(
-                matrixStack,
-                context.consumers(),
-                BlockPos(0, 100, 0),
-                Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')),
-                context.camera()
-            )
 
             if (MinecraftClient.getInstance().world != null || MinecraftClient.getInstance().player != null) {
                 renderFilled(context, BlockPos(0, 99, 0), ONE, Color(100, 0, 100), 0.5f, true, true);
@@ -62,6 +57,7 @@ class RenderUtils {
 
             renderBlockWithBeacon(context, BlockPos(2, 99, 0), Color(100, 0, 100), 0.5f, true, false)
 
+            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
         }
 
     }
@@ -76,7 +72,7 @@ class RenderUtils {
         color: Color,
         throughWalls: Boolean
     ) {
-        if(!throughWalls && !FrustumUtils().isVisible(convertToBox(pos))) return
+        if(!throughWalls && !FrustumUtils.isVisible(convertToBox(pos))) return
         val red = color.red.toFloat()
         val green = color.green.toFloat()
         val blue =  color.blue.toFloat()
@@ -100,64 +96,53 @@ class RenderUtils {
         )
 
         matrices.pop()
-        //}
     }
 
-    fun renderTextAtBlockPos(
-        matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: BlockPos,
-        text: Text, camera: Camera
+    fun renderText(
+        context: WorldRenderContext, text: Text, pos: BlockPos, throughWalls: Boolean
     ) {
-        renderTextAtBlockPos(
-            matrixStack,
-            vertexConsumerProvider,
-            Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5),
-            text,
-            camera
-        )
+        renderText(context, text, pos, 1f, throughWalls)
     }
 
-    fun renderTextAtBlockPos(
-        matrixStack: MatrixStack, vertexConsumerProvider: VertexConsumerProvider?, pos: Vec3d,
-        text: Text, camera: Camera
+    fun renderText(
+        context: WorldRenderContext, text: Text, pos: BlockPos, scale: Float, throughWalls: Boolean
     ) {
+        renderText(context, text, blockPosToVec(pos), scale, 0f, throughWalls)
+    }
 
-        if(!FrustumUtils().isVisible(convertToBox(vecToBlockPos(pos)))) return
+    fun renderText(
+        context: WorldRenderContext, text: Text, pos: Vec3d, scale: Float, yOffset: Float, throughWalls: Boolean
+    ) {
         val client = MinecraftClient.getInstance()
-        val cameraPos = camera.pos
 
-        val x = (pos.x - cameraPos.x)
-        val y = (pos.y - cameraPos.y)
-        val z = (pos.z - cameraPos.z)
-
-        val rotation = camera.rotation
-
-        matrixStack.push()
-
-        matrixStack.translate(x, y, z)
-
-        matrixStack.multiply(rotation)
-
-        matrixStack.scale(-0.025f, -0.025f, 0.025f)
-
-        val matrix4f: Matrix4f = matrixStack.peek().positionMatrix
-
+        val matrices = context.matrixStack()
+        val camera = context.camera().pos
         val textRenderer: TextRenderer = client.textRenderer
-        val offset = ((-textRenderer.getWidth(text) / 2).toFloat())
 
-        textRenderer.draw(
-            text.literalString,
-            offset,
-            0f,
-            0,
-            false,
-            matrix4f,
-            vertexConsumerProvider,
-            TextLayerType.SEE_THROUGH,
-            0,
-            LightmapTextureManager.MAX_LIGHT_COORDINATE
-        )
+        val adjustedScale = scale * 0.025f
 
-        matrixStack.pop()
+        matrices.push()
+        matrices.translate(pos.x - camera.x, pos.y - camera.y, pos.z - camera.z)
+        matrices.peek().positionMatrix.mul(RenderSystem.getModelViewMatrix())
+        matrices.multiply(context.camera().rotation)
+        matrices.scale(-adjustedScale, -adjustedScale, adjustedScale)
+
+        val positionMatrix = matrices.peek().positionMatrix
+        val xOffset = -textRenderer.getWidth(text) / 2f
+
+        val tessellator = RenderSystem.renderThreadTesselator()
+        val buffer = tessellator.buffer
+        val consumers = VertexConsumerProvider.immediate(buffer)
+
+        RenderSystem.depthFunc(if (throughWalls) GL11.GL_ALWAYS else GL11.GL_LEQUAL)
+        val textLayerType = if (throughWalls) TextLayerType.SEE_THROUGH else TextLayerType.NORMAL
+
+        textRenderer.draw(text, xOffset, yOffset, 0xFFFFFF, false, positionMatrix, consumers,
+            textLayerType, 0, LightmapTextureManager.MAX_LIGHT_COORDINATE)
+        consumers.draw()
+
+        RenderSystem.depthFunc(GL11.GL_EQUAL)
+        matrices.pop()
     }
 
     private fun renderFilled(
@@ -170,7 +155,7 @@ class RenderUtils {
         throughWalls: Boolean
     ) {
         if(alpha == 0f) return
-        if(!throughWalls && !(FrustumUtils().isVisible(convertToBox(blockPos)))) return
+        if(!throughWalls && !(FrustumUtils.isVisible(convertToBox(blockPos)))) return
 
         val matrices = context.matrixStack()
         val camera = context.camera().pos
@@ -207,7 +192,7 @@ class RenderUtils {
         throughWalls: Boolean
     ) {
         if(alpha == 0f) return
-        if(!throughWalls && !FrustumUtils().isVisible(convertToBox(blockPos))) return
+        if(!throughWalls && !FrustumUtils.isVisible(convertToBox(blockPos))) return
 
         // Get the position of the block and the camera
         val camera = context.camera()

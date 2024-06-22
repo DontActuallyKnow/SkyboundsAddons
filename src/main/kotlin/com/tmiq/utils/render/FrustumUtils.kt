@@ -6,7 +6,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.render.Frustum
 import net.minecraft.util.math.Box
 
-class FrustumUtils {
+object FrustumUtils {
 
     fun getFrustum(): Frustum {
         return (MinecraftClient.getInstance().worldRenderer as WorldRendererAccessor).frustum
