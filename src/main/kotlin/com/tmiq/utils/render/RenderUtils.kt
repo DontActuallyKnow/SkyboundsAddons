@@ -35,7 +35,10 @@ object RenderUtils {
     private const val MAX_OVERWORLD_BUILD_HEIGHT = 319
     private val ONE = Vec3d(1.0, 1.0, 1.0)
 
-    fun init() {
+
+    // EXAMPLES
+
+    /*fun init() {
         val marker = TimeMarker.now()
 
         WorldRenderEvents.AFTER_TRANSLUCENT.register { context ->
@@ -43,18 +46,18 @@ object RenderUtils {
             val passedSince = marker.passedSince()
             val timeFormat = passedSince.format(TimeUnit.MINUTE)
 
-            //renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
+            renderText(context, Text.literal(Utils.c("&4Time since init: &a${timeFormat}", '&')), BlockPos(0, 100, 0), true)
 
-            //renderOutline(context, BlockPos(1, 100, 1), Color(102, 102, 255), 5f, 1f, false)
+            renderOutline(context, BlockPos(1, 100, 1), Color(102, 102, 255), 5f, 1f, false)
 
-            //renderBox(context, BlockPos(2, 99, 0), Color(223, 32, 32), 0.3f, true, true)
+            renderBox(context, BlockPos(2, 99, 0), Color(223, 32, 32), 0.3f, true, true)
 
-            //renderBoxWithBeam(context, BlockPos(4, 99, 0), Color(158, 77, 179), 0.5f, false, true)
+            renderBoxWithBeam(context, BlockPos(4, 99, 0), Color(158, 77, 179), 0.5f, false, true)
 
-            //renderLineFromCursor(context, blockPosToCenterVec(BlockPos(2, 99, 0)), Color(255, 255, 128), 1f, 2f)
+            renderLineFromCursor(context, blockPosToCenterVec(BlockPos(2, 99, 0)), Color(255, 255, 128), 1f, 2f)
 
         }
-    }
+    }*/
 
 
     private fun renderBeaconBeam(
@@ -159,6 +162,7 @@ object RenderUtils {
         scale: Float,
         yOffset: Float,
         throughWalls: Boolean,
+        displayDistance: Boolean,
         maxDistance: Double,
         distanceColor: Char
     ) {
@@ -219,7 +223,7 @@ object RenderUtils {
             distanceText = Text.literal("")
         }
 
-        var titleOffsetY = if (distance > 5) 9f else 0f
+        var titleOffsetY = if (distance > 5 && displayDistance) 9f else 0f
 
         // Title
         textRenderer.draw(
@@ -237,7 +241,7 @@ object RenderUtils {
 
         positionMatrix.scale(0.7f)
 
-        if (distance > 5) {
+        if (distance > 5 && displayDistance) {
             // Distance
             textRenderer.draw(
                 distanceText,

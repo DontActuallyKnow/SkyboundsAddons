@@ -15,7 +15,6 @@ class SkyboundsAddons : ModInitializer {
 		SkyboundsaddonsCommand().init()
 
 		WaypointHandler.init()
-		RenderUtils.init()
 		BlockBrokenFeature().init()
 	}
 

@@ -1,6 +1,7 @@
 package com.tmiq.utils.render
 
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -15,16 +16,20 @@ object WaypointHandler {
             for (waypoint in waypoints) {
                 RenderUtils.renderBoxWithBeam(context, waypoint.pos, waypoint.color, waypoint.alpha, waypoint.throughWalls, true)
                 if (waypoint.displayDistance) {
-                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), waypoint.scale, 0f, true, waypoint.maxDistanceScaling, waypoint.distanceColor)
+                    RenderUtils.renderWaypointText(context, waypoint.title, waypoint.getVec3d(), waypoint.scale, 0f,
+                        true, waypoint.displayDistance, waypoint.maxDistanceScaling, waypoint.distanceColor)
                 }
             }
+        }
+
+        ServerWorldEvents.LOAD.register { _, _ ->
+            waypoints.clear()
         }
 
     }
 
     fun addWaypoint(waypoint: Waypoint) {
         if(!waypoints.contains(waypoint)) waypoints.add(waypoint)
-
     }
 
     fun removeWaypoint(waypoint: Waypoint) {
