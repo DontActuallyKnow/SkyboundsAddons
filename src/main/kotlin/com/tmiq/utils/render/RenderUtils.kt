@@ -12,12 +12,10 @@ import com.tmiq.utils.time.TimeMarker
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.font.GlyphRenderer
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.font.TextRenderer.TextLayerType
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box

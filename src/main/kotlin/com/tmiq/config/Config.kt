@@ -1,7 +1,7 @@
 package com.tmiq.config
 
 //Todo: Implement and port MoulConfig
-/*
+
 import com.google.gson.annotations.Expose
 import com.tmiq.config.categories.CategoryGeneral
 import io.github.notenoughupdates.moulconfig.Config
@@ -20,4 +20,4 @@ class Config : Config() {
     @JvmField @Expose @Category(name = "General", desc = "")
     var categoryGeneral: CategoryGeneral = CategoryGeneral()
 
-}*/
+}

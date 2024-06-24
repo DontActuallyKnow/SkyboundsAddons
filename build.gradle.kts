@@ -29,6 +29,7 @@ val shadowImpl: Configuration by configurations.creating {
 }
 
 dependencies {
+	modImplementation("net.fabricmc:fabric-language-kotlin:1.11.0+kotlin.2.0.0")
 	// To change the versions see the gradle.properties file
 	"minecraft"("com.mojang:minecraft:${project.property("minecraft_version")}")
 	"mappings"("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
@@ -36,6 +37,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	"modImplementation"("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
+
 
 	implementation("org.reflections:reflections:0.9.12")
 	implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")

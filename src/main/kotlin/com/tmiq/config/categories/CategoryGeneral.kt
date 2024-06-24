@@ -1,7 +1,7 @@
 package com.tmiq.config.categories
 
 //Todo: Implement and port MoulConfig
-/*
+
 import com.google.gson.annotations.Expose
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorBoolean
 import io.github.notenoughupdates.moulconfig.annotations.ConfigEditorColour
@@ -18,4 +18,4 @@ class CategoryGeneral {
     @ConfigOption(name = "Test Color picker", desc = "Test for color picker") @ConfigEditorColour
     var testColor: String = "0:0:0:0:0"
 
-}*/
+}
