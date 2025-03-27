@@ -12,24 +12,27 @@ base {
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
+	maven("https://oss.sonatype.org/content/repositories/snapshots/")
+	maven("https://jitpack.io")
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
 	mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
+
 	modImplementation("net.fabricmc:fabric-loader:${project.property("loader_version")}")
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
 	modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
-	modImplementation("org.reflections:reflections:0.10.2")
+	implementation("org.reflections:reflections:0.10.2")
+
+	implementation("org.lwjgl:lwjgl-nanovg:3.3.2")
+	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-windows")
+	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-linux")
+	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-macos")
 }
 
 tasks.processResources {

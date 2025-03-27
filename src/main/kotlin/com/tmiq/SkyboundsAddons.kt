@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory
 
 object SkyboundsAddons : ModInitializer {
 
-	val LOGGER: Logger = LoggerFactory.getLogger("skyboundsaddons")
+	private val LOGGER: Logger = LoggerFactory.getLogger("skyboundsaddons")
+		get() = field
 
 	override fun onInitialize() {
 		LOGGER.info("SkyboundsAddons Initializing!")

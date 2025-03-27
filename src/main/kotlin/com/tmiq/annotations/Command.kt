@@ -1,6 +1,6 @@
 package com.tmiq.annotations
 
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Command(
     val name: String = "",
