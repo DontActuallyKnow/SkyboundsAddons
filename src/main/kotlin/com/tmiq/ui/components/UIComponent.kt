@@ -6,6 +6,8 @@ abstract class UIComponent(
 
     open fun draw(vg: Long) {}
     open fun onMouseClick(x: Float, y: Float) {}
+    open fun onMouseMove(x: Float, y: Float) {}
+    open fun onMouseRelease(x: Float, y: Float) {}
     open fun onKeyPress(key: Int) {}
 
 }

@@ -1,12 +1,14 @@
 package com.tmiq.utils
 
 import com.tmiq.ui.NanoVGRenderer
+import net.minecraft.client.MinecraftClient
 import org.lwjgl.nanovg.*
 import org.lwjgl.system.MemoryStack
 import java.awt.Color
 
 object NVGUtils {
 
+    // TODO: Implement custom themes through config json
     val WHITE = Color(255, 255, 255, 255).rgb
     val BLACK = Color(0, 0, 0, 255).rgb
     val TRANSPARENT = Color(0, 0, 0, 0).rgb
@@ -17,7 +19,9 @@ object NVGUtils {
     val WARNING = Color(255, 152, 0, 255).rgb
     val INFO = Color(33, 150, 243, 255).rgb
 
-    fun getPixelRatio(): Float = 1f
+    fun getPixelRatio(): Float {
+        return MinecraftClient.getInstance().window.scaleFactor.toFloat()
+    }
     
     /**
      * Creates a 32-bit integer representing a color with the specified red, green, blue, and alpha values.
@@ -57,7 +61,11 @@ object NVGUtils {
     }
 
     /**
+     * Creates a NanoVG color object from an ARGB integer color value.
      *
+     * @param stack The memory stack used for allocating the NanoVG color object.
+     * @param color The ARGB integer color value where each byte represents alpha, red, green, and blue channels respectively.
+     * @return A NanoVG color object representing the specified ARGB color.
      */
     fun nvgColor(stack: MemoryStack, color: Int): NVGColor {
         val nvgColor = NVGColor.calloc(stack)
@@ -69,6 +77,22 @@ object NVGUtils {
         return nvgColor
     }
 
+    /**
+     * Draws a rounded rectangle on a NanoVG drawing context.
+     *
+     * This function supports both filled and stroked rectangles, allowing customization
+     * of corner radius, color, and stroke width.
+     *
+     * @param vg         NanoVG drawing context handle.
+     * @param x          X-coordinate of the top-left corner of the rectangle.
+     * @param y          Y-coordinate of the top-left corner of the rectangle.
+     * @param width      Width of the rectangle.
+     * @param height     Height of the rectangle.
+     * @param radius     Corner radius for the rounded rectangle.
+     * @param color      Color of the rectangle in ARGB format.
+     * @param filled     Determines whether the rectangle is filled. Default is true.
+     * @param strokeWidth Width of the stroke line if `filled` is false. Default is 1f.
+     */
     fun drawRoundedRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
                         radius: Float, color: Int, filled: Boolean = true, strokeWidth: Float = 1f) {
         MemoryStack.stackPush().use { stack ->
@@ -88,6 +112,18 @@ object NVGUtils {
         }
     }
 
+    /**
+     * Draws a rectangle with a shadow effect using a box gradient.
+     *
+     * @param vg The NanoVG context handle used for rendering.
+     * @param x The x-coordinate of the rectangle.
+     * @param y The y-coordinate of the rectangle.
+     * @param width The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param radius The corner radius of the rectangle.
+     * @param shadowSize The size of the shadow effect.
+     * @param shadowColor The color of the shadow as an integer.
+     */
     fun drawShadowRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
                        radius: Float, shadowSize: Float, shadowColor: Int) {
         MemoryStack.stackPush().use { stack ->
@@ -109,26 +145,17 @@ object NVGUtils {
         }
     }
 
-    fun drawText(vg: Long, text: String, x: Float, y: Float, size: Float,
-                 color: Int, align: TextAlign = TextAlign.LEFT, fontName: String = "sans") {
-        MemoryStack.stackPush().use { stack ->
-            val nvgColor = nvgColor(stack, color)
+    // TODO Create draw text
 
-            NanoVG.nvgFontSize(vg, size)
-            NanoVG.nvgFontFace(vg, fontName)
-
-            val alignValue = when(align) {
-                TextAlign.LEFT -> NanoVG.NVG_ALIGN_LEFT
-                TextAlign.CENTER -> NanoVG.NVG_ALIGN_CENTER or NanoVG.NVG_ALIGN_MIDDLE
-                TextAlign.RIGHT -> NanoVG.NVG_ALIGN_RIGHT
-            }
-            NanoVG.nvgTextAlign(vg, alignValue)
-
-            NanoVG.nvgFillColor(vg, nvgColor)
-            NanoVG.nvgText(vg, x, y, text)
-        }
-    }
-
+    /**
+     * Measures the width of a given text string rendered with a specified font size and font face.
+     *
+     * @param vg the NanoVG context reference.
+     * @param text the string of text whose width is to be measured.
+     * @param size the font size to use for the measurement.
+     * @param fontName the name of the font to use for the measurement. Defaults to "sans".
+     * @return a Float representing the width of the text in pixels.
+     */
     fun measureTextWidth(vg: Long, text: String, size: Float, fontName: String = "sans"): Float {
         NanoVG.nvgFontSize(vg, size)
         NanoVG.nvgFontFace(vg, fontName)
@@ -139,6 +166,21 @@ object NVGUtils {
         }
     }
 
+    /**
+     * Draws a rectangle with a gradient fill. The gradient can be either vertical or horizontal,
+     * transitioning between the specified start and end colors.
+     *
+     * @param vg The NanoVG context handle.
+     * @param x The x-coordinate of the rectangle's top-left corner.
+     * @param y The y-coordinate of the rectangle's top-left corner.
+     * @param width The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param radius The corner radius for rounding the rectangle. Set to 0 for sharp corners.
+     * @param startColor The starting color of the gradient, in ARGB format.
+     * @param endColor The ending color of the gradient, in ARGB format.
+     * @param vertical A boolean indicating the direction of the gradient.
+     *                 If true, the gradient is vertical (top-to-bottom). Defaults to false (left-to-right).
+     */
     fun drawGradientRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
                          radius: Float, startColor: Int, endColor: Int, vertical: Boolean = false) {
         MemoryStack.stackPush().use { stack ->
@@ -165,6 +207,17 @@ object NVGUtils {
         }
     }
 
+    /**
+     * Draws a circle on the screen using the NanoVG graphics library.
+     *
+     * @param vg The handle to the NanoVG context.
+     * @param x The x-coordinate of the center of the circle.
+     * @param y The y-coordinate of the center of the circle.
+     * @param radius The radius of the circle.
+     * @param color The color of the circle in ARGB format.
+     * @param filled Indicates whether the circle should be filled. If false, the circle will be stroked.
+     * @param strokeWidth The width of the stroke when `filled` is false. Defaults to 1f.
+     */
     fun drawCircle(vg: Long, x: Float, y: Float, radius: Float,
                    color: Int, filled: Boolean = true, strokeWidth: Float = 1f) {
         MemoryStack.stackPush().use { stack ->
@@ -184,6 +237,16 @@ object NVGUtils {
         }
     }
 
+    /**
+     * Draws an image onto the specified context at a given position and size.
+     *
+     * @param vg The handle to the NanoVG context.
+     * @param image The identifier of the image to be drawn.
+     * @param x The x-coordinate of the top-left corner where the image will be drawn.
+     * @param y The y-coordinate of the top-left corner where the image will be drawn.
+     * @param width The width of the image.
+     * @param height The height of the image.
+     */
     fun drawImage(vg: Long, image: Int, x: Float, y: Float, width: Float, height: Float) {
         MemoryStack.stackPush().use { stack ->
             val paint = NVGPaint.calloc(stack)

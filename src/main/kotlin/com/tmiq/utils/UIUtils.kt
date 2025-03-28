@@ -15,11 +15,7 @@ object UIUtils {
      */
     fun setScreenWithHistory(screen: Screen) {
         previousScreen = MinecraftClient.getInstance().currentScreen
-
-
-
         MinecraftClient.getInstance().send {
-            // Store the current screen before replacing it
             MinecraftClient.getInstance().setScreen(screen)
         }
     }
