@@ -1,43 +1,123 @@
 package com.tmiq
 
 import com.tmiq.ui.NanoVGRenderer
-import com.tmiq.ui.StyleManager
-import com.tmiq.ui.UIManager
-import com.tmiq.ui.components.UIButton
-import com.tmiq.utils.UIUtils
-import net.minecraft.client.MinecraftClient
+import com.tmiq.ui.components.*
+import com.tmiq.ui.text.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
+import java.awt.Color
 
 class Screen : Screen(Text.of("UI Test")) {
 
+    private val uiManager = NanoVGRenderer.getUiManager()
+    private lateinit var container: UIContainer
+    private lateinit var splitLayout: UISplitLayout
+    private lateinit var sidebar: UISidebar
+    private lateinit var pageComponent: UIPage
+
     override fun init() {
         super.init()
-
         NanoVGRenderer.init()
 
-        val uiManager = NanoVGRenderer.getUiManager()
-        uiManager.add(UIButton(50f, 50f, 120f, 40f, "Primary", {
-            println("Primary button clicked!")
-            StyleManager.toggleDarkMode()
-        }, UIButton.ButtonStyle.PRIMARY))
+        // Create main container with even padding
+        container = UIContainer(
+            x = width * 0.1f,  // 10% padding on left and right
+            y = height * 0.1f, // 10% padding on top and bottom
+            width = width * 0.8f,
+            height = height * 0.8f,
+            padding = 20f
+        )
 
-        // Secondary button
-        uiManager.add(UIButton(50f, 100f, 120f, 40f, "Secondary", {
-            println("Secondary button clicked!")
-        }, UIButton.ButtonStyle.SECONDARY))
+        // Create split layout with sidebar and content area
+        splitLayout = UISplitLayout(
+            container.innerX,
+            container.innerY,
+            container.innerWidth,
+            container.innerHeight,
+            sidebarWidth = 200f
+        )
 
-        // Success button
-        uiManager.add(UIButton(50f, 150f, 120f, 40f, "Success", {
-            println("Success button clicked!")
-        }, UIButton.ButtonStyle.SUCCESS))
+        // Create sidebar with menu items
+        sidebar = UISidebar(
+            splitLayout.sidebarX,
+            splitLayout.sidebarY,
+            200f,
+            splitLayout.height
+        )
+        sidebar.addMenuItem("Dashboard")
+        sidebar.addMenuItem("Settings")
+        sidebar.addMenuItem("Profile")
 
-        // Danger button
-        uiManager.add(UIButton(50f, 200f, 120f, 40f, "Danger", {
-            println("Danger button clicked!")
-        }, UIButton.ButtonStyle.DANGER))
+        // Create page component
+        pageComponent = UIPage(
+            splitLayout.pageX,
+            splitLayout.pageY,
+            splitLayout.pageWidth,
+            splitLayout.height
+        )
+
+        // Add components to first page (Dashboard)
+        pageComponent.addComponentToPage(
+            0,
+            UILabel(
+                0f, 0f, 300f, 40f, "Dashboard",
+                fontSize = 24f, fontName = "bold",
+                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
+            )
+        )
+        pageComponent.addComponentToPage(
+            0,
+            UIButton(0f, 0f, 200f, 40f, "Dashboard Action", {
+                println("Dashboard action clicked!")
+            }, UIButton.ButtonStyle.PRIMARY)
+        )
+
+        // Add components to second page (Settings)
+        pageComponent.addComponentToPage(
+            1,
+            UILabel(
+                0f, 0f, 300f, 40f, "Settings",
+                fontSize = 24f, fontName = "bold",
+                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
+            )
+        )
+        pageComponent.addComponentToPage(
+            1,
+            UISwitch(0f, 0f, 60f, 20f, false) {
+                println("Settings switch toggled to $it")
+            }
+        )
+
+        pageComponent.addComponentToPage(
+            2,
+            UILabel(
+                0f, 0f, 300f, 40f, "Profile",
+                fontSize = 24f, fontName = "bold",
+                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
+            )
+        )
+        pageComponent.addComponentToPage(
+            2,
+            UIButton(0f, 0f, 200f, 40f, "Edit Profile", {
+                println("Edit profile clicked!")
+            }, UIButton.ButtonStyle.SECONDARY)
+        )
+
+        // Link sidebar page changes to the pageComponent
+        sidebar.setOnPageChangeListener { pageIndex ->
+            pageComponent.setPage(pageIndex)
+        }
+
+        // Connect the components
+        splitLayout.setSidebar(sidebar)
+        splitLayout.setPageComponent(pageComponent)
+        container.add(splitLayout)
+
+        // Add the container to the UI manager
+        uiManager.add(container)
     }
+
 
     override fun shouldPause(): Boolean {
         return false
@@ -81,6 +161,7 @@ class Screen : Screen(Text.of("UI Test")) {
     override fun removed() {
         super.removed()
 
+        uiManager.clear()
         NanoVGRenderer.dispose()
     }
 

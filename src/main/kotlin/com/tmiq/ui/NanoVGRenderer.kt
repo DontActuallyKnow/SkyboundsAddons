@@ -1,6 +1,9 @@
 package com.tmiq.ui
 
 import com.mojang.blaze3d.systems.RenderSystem
+import com.tmiq.ui.text.FontManager
+import com.tmiq.ui.text.TextRenderer
+import com.tmiq.utils.NVGUtils
 import net.minecraft.client.gui.DrawContext
 import org.lwjgl.nanovg.NanoVG
 import org.lwjgl.nanovg.NanoVGGL3
@@ -10,6 +13,9 @@ object NanoVGRenderer {
 
     private var vg: Long = 0
     private val uiManager = UIManager()
+
+    private val fontManager = FontManager()
+    private lateinit var textRenderer: TextRenderer
 
     /**
      * Retrieves the unique identifier for the vector graphics rendering context.
@@ -29,6 +35,13 @@ object NanoVGRenderer {
         return uiManager
     }
 
+    fun getTextRenderer(): TextRenderer {
+        if (!::textRenderer.isInitialized) {
+            textRenderer = TextRenderer(fontManager)
+        }
+        return textRenderer
+    }
+
     /**
      * Initializes the NanoVG rendering context.
      *
@@ -43,17 +56,16 @@ object NanoVGRenderer {
      * @throws RuntimeException if the NanoVG context cannot be initialized.
      */
     fun init() {
-        if (vg != 0L) {
-            dispose()
-        }
+        dispose()
 
         vg = NanoVGGL3.nvgCreate(NanoVGGL3.NVG_ANTIALIAS or NanoVGGL3.NVG_STENCIL_STROKES)
         if (vg == 0L) {
             throw RuntimeException("Could not initialize NanoVG")
         }
-    }
 
-    // TODO Optimise / fix font loading (probably source of crashes)
+        fontManager.loadFonts()
+        if (!::textRenderer.isInitialized) textRenderer = TextRenderer(fontManager)
+    }
 
     /**
      * Renders the user interface using NanoVG within the specified drawing context and dimensions.
@@ -66,31 +78,26 @@ object NanoVGRenderer {
      * @param height the height of the rendering area
      */
     fun render(drawContext: DrawContext, width: Int, height: Int) {
-        if (vg == 0L) return // Don't attempt to render with invalid context
+        if (vg == 0L) return
 
-        // Save OpenGL state before modifying it
         val originalBlendEnabled = GL11.glGetBoolean(GL11.GL_BLEND)
         val originalCullFaceEnabled = GL11.glGetBoolean(GL11.GL_CULL_FACE)
 
+        val scale = NVGUtils.getPixelRatio()
+
         try {
-            // Setup OpenGL state for NanoVG
             GL11.glEnable(GL11.GL_BLEND)
             GL11.glDisable(GL11.GL_CULL_FACE)
 
-            // Begin NanoVG frame
-            NanoVG.nvgBeginFrame(vg, width.toFloat(), height.toFloat(), 1f)
+            NanoVG.nvgBeginFrame(vg, width.toFloat(), height.toFloat(), scale)
 
-            // Render UI components
             uiManager.draw(vg)
 
-            // End frame
             NanoVG.nvgEndFrame(vg)
         } finally {
-            // Restore OpenGL state
             if (!originalBlendEnabled) GL11.glDisable(GL11.GL_BLEND)
             if (originalCullFaceEnabled) GL11.glEnable(GL11.GL_CULL_FACE)
 
-            // Reset any other state changes
             RenderSystem.enableCull()
             RenderSystem.disableBlend()
         }
@@ -145,9 +152,20 @@ object NanoVGRenderer {
      * and cannot be used further. Subsequent calls to this method have no effect.
      */
     fun dispose() {
+        // Unload fonts first
+        if (vg != 0L) {
+            fontManager.unloadFonts()
+        }
+
+        // Dispose of the text renderer if it exists
+        if (::textRenderer.isInitialized) {
+            textRenderer.dispose()
+        }
+
+        // Free the NanoVG context
         if (vg != 0L) {
             NanoVGGL3.nvgDelete(vg)
-            vg = 0L // Reset to prevent double-free errors
+            vg = 0L
         }
     }
 

@@ -1,28 +1,23 @@
 package com.tmiq.utils
 
-import com.tmiq.ui.NanoVGRenderer
 import net.minecraft.client.MinecraftClient
-import org.lwjgl.nanovg.*
+import org.lwjgl.nanovg.NVGColor
+import org.lwjgl.nanovg.NVGPaint
+import org.lwjgl.nanovg.NanoVG
 import org.lwjgl.system.MemoryStack
 import java.awt.Color
 
 object NVGUtils {
 
-    // TODO: Implement custom themes through config json
-    val WHITE = Color(255, 255, 255, 255).rgb
-    val BLACK = Color(0, 0, 0, 255).rgb
-    val TRANSPARENT = Color(0, 0, 0, 0).rgb
-    val PRIMARY = Color(33, 150, 243, 255).rgb
-    val SECONDARY = Color(156, 39, 176, 255).rgb
-    val SUCCESS = Color(76, 175, 80, 255).rgb
-    val DANGER = Color(244, 67, 54, 255).rgb
-    val WARNING = Color(255, 152, 0, 255).rgb
-    val INFO = Color(33, 150, 243, 255).rgb
-
+    /**
+     * Retrieves the pixel ratio (or scale factor) used by the Minecraft client window.
+     *
+     * @return The pixel ratio as a Float, which represents the scaling factor of the client window.
+     */
     fun getPixelRatio(): Float {
         return MinecraftClient.getInstance().window.scaleFactor.toFloat()
     }
-    
+
     /**
      * Creates a 32-bit integer representing a color with the specified red, green, blue, and alpha values.
      *
@@ -93,8 +88,10 @@ object NVGUtils {
      * @param filled     Determines whether the rectangle is filled. Default is true.
      * @param strokeWidth Width of the stroke line if `filled` is false. Default is 1f.
      */
-    fun drawRoundedRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
-                        radius: Float, color: Int, filled: Boolean = true, strokeWidth: Float = 1f) {
+    fun drawRoundedRect(
+        vg: Long, x: Float, y: Float, width: Float, height: Float,
+        radius: Float, color: Int, filled: Boolean = true, strokeWidth: Float = 1f
+    ) {
         MemoryStack.stackPush().use { stack ->
             val nvgColor = nvgColor(stack, color)
 
@@ -124,8 +121,10 @@ object NVGUtils {
      * @param shadowSize The size of the shadow effect.
      * @param shadowColor The color of the shadow as an integer.
      */
-    fun drawShadowRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
-                       radius: Float, shadowSize: Float, shadowColor: Int) {
+    fun drawShadowRect(
+        vg: Long, x: Float, y: Float, width: Float, height: Float,
+        radius: Float, shadowSize: Float, shadowColor: Int
+    ) {
         MemoryStack.stackPush().use { stack ->
             val shadowColorInner = nvgColor(stack, shadowColor)
             val shadowColorOuter = nvgColor(stack, withAlpha(shadowColor, 0))
@@ -138,8 +137,10 @@ object NVGUtils {
             )
 
             NanoVG.nvgBeginPath(vg)
-            NanoVG.nvgRect(vg, x - shadowSize, y - shadowSize/2,
-                width + shadowSize*2, height + shadowSize*2)
+            NanoVG.nvgRect(
+                vg, x - shadowSize, y - shadowSize / 2,
+                width + shadowSize * 2, height + shadowSize * 2
+            )
             NanoVG.nvgFillPaint(vg, shadowPaint)
             NanoVG.nvgFill(vg)
         }
@@ -181,8 +182,10 @@ object NVGUtils {
      * @param vertical A boolean indicating the direction of the gradient.
      *                 If true, the gradient is vertical (top-to-bottom). Defaults to false (left-to-right).
      */
-    fun drawGradientRect(vg: Long, x: Float, y: Float, width: Float, height: Float,
-                         radius: Float, startColor: Int, endColor: Int, vertical: Boolean = false) {
+    fun drawGradientRect(
+        vg: Long, x: Float, y: Float, width: Float, height: Float,
+        radius: Float, startColor: Int, endColor: Int, vertical: Boolean = false
+    ) {
         MemoryStack.stackPush().use { stack ->
             val startNvgColor = nvgColor(stack, startColor)
             val endNvgColor = nvgColor(stack, endColor)
@@ -218,8 +221,10 @@ object NVGUtils {
      * @param filled Indicates whether the circle should be filled. If false, the circle will be stroked.
      * @param strokeWidth The width of the stroke when `filled` is false. Defaults to 1f.
      */
-    fun drawCircle(vg: Long, x: Float, y: Float, radius: Float,
-                   color: Int, filled: Boolean = true, strokeWidth: Float = 1f) {
+    fun drawCircle(
+        vg: Long, x: Float, y: Float, radius: Float,
+        color: Int, filled: Boolean = true, strokeWidth: Float = 1f
+    ) {
         MemoryStack.stackPush().use { stack ->
             val nvgColor = nvgColor(stack, color)
 

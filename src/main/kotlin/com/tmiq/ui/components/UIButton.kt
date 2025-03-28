@@ -1,6 +1,8 @@
 package com.tmiq.ui.components
 
+import com.tmiq.ui.NanoVGRenderer
 import com.tmiq.ui.StyleManager
+import com.tmiq.ui.text.TextRenderer
 import com.tmiq.utils.NVGUtils
 
 class UIButton(
@@ -83,21 +85,31 @@ class UIButton(
             NVGUtils.drawRoundedRect(vg, x + offsetX, y + offsetY, scaledWidth, scaledHeight, 2f, hoverColor)
         }
 
+        val textRenderer = NanoVGRenderer.getTextRenderer()
         val textX = x + width / 2
-        val textY = y + height / 2
+        val textY = y + height / 2 + 12f / 3
+
+        textRenderer.drawText(
+            label,
+            textX,
+            textY,
+            12f,  // TODO Make configurable
+            java.awt.Color(textColor),
+            "regular",  // TODO Make configurable
+            TextRenderer.ALIGN_CENTER
+        )
     }
 
     override fun onMouseMove(mx: Float, my: Float) {
-        isHovered = mx >= x && mx <= x + width && my >= y && my <= y + height
+        isHovered = isPointInside(mx, my)
 
-        // Reset click state if mouse moved out
         if (!isHovered) {
             isClicked = false
         }
     }
 
     override fun onMouseClick(mx: Float, my: Float) {
-        if (mx >= x && mx <= x + width && my >= y && my <= y + height) {
+        if (isPointInside(mx, my)) {
             isClicked = true
             onClick()
         }
@@ -106,4 +118,5 @@ class UIButton(
     override fun onMouseRelease(mx: Float, my: Float) {
         isClicked = false
     }
+
 }
