@@ -144,6 +144,15 @@ object NanoVGRenderer {
         uiManager.handleMouseRelease(mouseX, mouseY)
     }
 
+    fun mouseScrolled(
+        mouseX: Double,
+        mouseY: Double,
+        horizontalAmount: Double,
+        verticalAmount: Double
+    ) {
+        uiManager.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount)
+    }
+
     /**
      * Releases the NanoVG rendering context and cleans up resources.
      *

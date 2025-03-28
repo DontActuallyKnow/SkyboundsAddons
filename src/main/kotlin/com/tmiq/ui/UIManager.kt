@@ -30,6 +30,15 @@ class UIManager {
         components.forEach { it.onMouseRelease(mouseX, mouseY) }
     }
 
+    fun mouseScrolled(
+        mouseX: Double,
+        mouseY: Double,
+        horizontalAmount: Double,
+        verticalAmount: Double
+    ) {
+        components.forEach { it.mouseScrolled(mouseX.toFloat(), mouseY.toFloat(), verticalAmount) }
+    }
+
     /**
      * Clears all components from the manager.
      * Useful when rebuilding the entire UI.

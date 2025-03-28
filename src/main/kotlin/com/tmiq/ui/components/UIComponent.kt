@@ -8,6 +8,7 @@ abstract class UIComponent(
     open fun onMouseMove(x: Float, y: Float) {}
     open fun onMouseRelease(x: Float, y: Float) {}
     open fun onKeyPress(key: Int) {}
+    open fun mouseScrolled(x: Float, y: Float, amount: Double) {}
 
     fun isPointInside(mx: Float, my: Float): Boolean {
         return mx >= x && mx <= x + width && my >= y && my <= y + height

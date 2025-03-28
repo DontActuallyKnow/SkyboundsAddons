@@ -1,8 +1,12 @@
 package com.tmiq
 
 import com.tmiq.ui.NanoVGRenderer
-import com.tmiq.ui.components.*
+import com.tmiq.ui.StyleManager
+import com.tmiq.ui.components.UIButton
+import com.tmiq.ui.components.UILabel
+import com.tmiq.ui.components.UISwitch
 import com.tmiq.ui.text.TextRenderer
+import com.tmiq.utils.UIUtils
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
@@ -10,114 +14,49 @@ import java.awt.Color
 
 class Screen : Screen(Text.of("UI Test")) {
 
-    private val uiManager = NanoVGRenderer.getUiManager()
-    private lateinit var container: UIContainer
-    private lateinit var splitLayout: UISplitLayout
-    private lateinit var sidebar: UISidebar
-    private lateinit var pageComponent: UIPage
+    val uiManager = NanoVGRenderer.getUiManager()
 
     override fun init() {
         super.init()
+
         NanoVGRenderer.init()
 
-        // Create main container with even padding
-        container = UIContainer(
-            x = width * 0.1f,  // 10% padding on left and right
-            y = height * 0.1f, // 10% padding on top and bottom
-            width = width * 0.8f,
-            height = height * 0.8f,
-            padding = 20f
+        val label = UILabel(
+            100f, 50f, 200f, 30f, "Hello World",
+            fontSize = 20f, fontName = "bold", textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
         )
 
-        // Create split layout with sidebar and content area
-        splitLayout = UISplitLayout(
-            container.innerX,
-            container.innerY,
-            container.innerWidth,
-            container.innerHeight,
-            sidebarWidth = 200f
-        )
+        uiManager.add(UISwitch(50f, 1f, 60f, 20f, false) {
+            println("Switch is toggled to $it")
+            label.setText("The switch is toggled to $it")
+        })
 
-        // Create sidebar with menu items
-        sidebar = UISidebar(
-            splitLayout.sidebarX,
-            splitLayout.sidebarY,
-            200f,
-            splitLayout.height
-        )
-        sidebar.addMenuItem("Dashboard")
-        sidebar.addMenuItem("Settings")
-        sidebar.addMenuItem("Profile")
+        uiManager.add(UIButton(50f, 50f, 120f, 40f, "Primary", {
+            println("Primary button clicked!")
+            label.setText("The primary button was clicked!")
+            StyleManager.toggleDarkMode()
+        }, UIButton.ButtonStyle.PRIMARY))
 
-        // Create page component
-        pageComponent = UIPage(
-            splitLayout.pageX,
-            splitLayout.pageY,
-            splitLayout.pageWidth,
-            splitLayout.height
-        )
+        // Secondary button
+        uiManager.add(UIButton(50f, 100f, 120f, 40f, "Secondary", {
+            println("Secondary button clicked!")
+            label.setText("The secondary button was clicked!")
+        }, UIButton.ButtonStyle.SECONDARY))
 
-        // Add components to first page (Dashboard)
-        pageComponent.addComponentToPage(
-            0,
-            UILabel(
-                0f, 0f, 300f, 40f, "Dashboard",
-                fontSize = 24f, fontName = "bold",
-                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
-            )
-        )
-        pageComponent.addComponentToPage(
-            0,
-            UIButton(0f, 0f, 200f, 40f, "Dashboard Action", {
-                println("Dashboard action clicked!")
-            }, UIButton.ButtonStyle.PRIMARY)
-        )
+        // Success button
+        uiManager.add(UIButton(50f, 150f, 120f, 40f, "Success", {
+            println("Success button clicked!")
+            label.setText("The success button was clicked!")
+        }, UIButton.ButtonStyle.SUCCESS))
 
-        // Add components to second page (Settings)
-        pageComponent.addComponentToPage(
-            1,
-            UILabel(
-                0f, 0f, 300f, 40f, "Settings",
-                fontSize = 24f, fontName = "bold",
-                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
-            )
-        )
-        pageComponent.addComponentToPage(
-            1,
-            UISwitch(0f, 0f, 60f, 20f, false) {
-                println("Settings switch toggled to $it")
-            }
-        )
+        // Danger button
+        uiManager.add(UIButton(50f, 200f, 120f, 40f, "Danger", {
+            println("Danger button clicked!")
+            UIUtils.closeScreen()
+        }, UIButton.ButtonStyle.DANGER))
 
-        pageComponent.addComponentToPage(
-            2,
-            UILabel(
-                0f, 0f, 300f, 40f, "Profile",
-                fontSize = 24f, fontName = "bold",
-                textColor = Color.WHITE, alignment = TextRenderer.ALIGN_CENTER
-            )
-        )
-        pageComponent.addComponentToPage(
-            2,
-            UIButton(0f, 0f, 200f, 40f, "Edit Profile", {
-                println("Edit profile clicked!")
-            }, UIButton.ButtonStyle.SECONDARY)
-        )
-
-        // Link sidebar page changes to the pageComponent
-        sidebar.setOnPageChangeListener { pageIndex ->
-            pageComponent.setPage(pageIndex)
-        }
-
-        // Connect the components
-        splitLayout.setSidebar(sidebar)
-        splitLayout.setPageComponent(pageComponent)
-        container.add(splitLayout)
-
-        // Add the container to the UI manager
-        uiManager.add(container)
+        uiManager.add(label)
     }
-
 
     override fun shouldPause(): Boolean {
         return false

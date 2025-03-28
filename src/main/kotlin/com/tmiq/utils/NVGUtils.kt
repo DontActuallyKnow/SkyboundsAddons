@@ -18,6 +18,22 @@ object NVGUtils {
         return MinecraftClient.getInstance().window.scaleFactor.toFloat()
     }
 
+    fun save(vg: Long) {
+        NanoVG.nvgSave(vg)
+    }
+
+    fun restore(vg: Long) {
+        NanoVG.nvgRestore(vg)
+    }
+
+    fun scissor(vg: Long, x: Float, y: Float, width: Float, height: Float) {
+        NanoVG.nvgScissor(vg, x, y, width, height)
+    }
+
+    fun resetScissor(vg: Long) {
+        NanoVG.nvgResetScissor(vg)
+    }
+
     /**
      * Creates a 32-bit integer representing a color with the specified red, green, blue, and alpha values.
      *
