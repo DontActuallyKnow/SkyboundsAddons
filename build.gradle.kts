@@ -29,10 +29,8 @@ dependencies {
 
 	implementation("org.reflections:reflections:0.10.2")
 
-	implementation("org.lwjgl:lwjgl-nanovg:3.3.2")
-	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-windows")
-	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-linux")
-	implementation("org.lwjgl:lwjgl-nanovg:3.3.2:natives-macos")
+	implementation("org.lwjgl:lwjgl-nanovg:3.3.3")
+	runtimeOnly("org.lwjgl:lwjgl-nanovg:3.3.3:natives-windows")
 }
 
 tasks.processResources {
