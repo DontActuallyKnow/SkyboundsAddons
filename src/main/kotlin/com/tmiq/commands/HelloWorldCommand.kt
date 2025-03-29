@@ -1,10 +1,11 @@
 package com.tmiq.commands
 
 import com.mojang.brigadier.context.CommandContext
-import com.tmiq.Screen
 import com.tmiq.annotations.Command
+import com.tmiq.config.Config
 import com.tmiq.utils.UIUtils
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.minecraft.client.MinecraftClient
 import net.minecraft.text.Text
 
 @Command(
@@ -18,7 +19,8 @@ object HelloWorldCommand {
     fun execute(context: CommandContext<FabricClientCommandSource>): Boolean {
         context.source.sendFeedback(Text.of("Hello World!"))
 
-        UIUtils.setScreenWithHistory(Screen())
+        val screen = Config.getScreen(MinecraftClient.getInstance().currentScreen)
+        UIUtils.setScreen(screen)
 
         return true
     }

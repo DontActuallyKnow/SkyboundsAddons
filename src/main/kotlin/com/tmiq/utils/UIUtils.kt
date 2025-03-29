@@ -1,6 +1,5 @@
 package com.tmiq.utils
 
-import com.tmiq.SkyboundsAddons
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.Screen
 
@@ -8,10 +7,10 @@ object UIUtils {
     private var previousScreen: Screen? = null
 
     /**
-     * Sets the current screen in the Minecraft client while preserving the previous screen
-     * in history for potential later use.
+     * Sets the given screen as the current screen while storing a reference
+     * to the previous screen for potential future use.
      *
-     * @param screen The screen to set as the current screen.
+     * @param screen The new screen to be displayed.
      */
     fun setScreenWithHistory(screen: Screen) {
         previousScreen = MinecraftClient.getInstance().currentScreen
@@ -21,9 +20,9 @@ object UIUtils {
     }
 
     /**
-     * Sets the current screen in the Minecraft client.
+     * Sets the current screen of the Minecraft client to the specified screen.
      *
-     * @param screen The screen to be set as the current screen.
+     * @param screen The screen to set as the current screen.
      */
     fun setScreen(screen: Screen) {
         MinecraftClient.getInstance().send {
@@ -32,8 +31,12 @@ object UIUtils {
     }
 
     /**
-     * Closes the current screen in the Minecraft client and navigates to the previous screen if available.
-     * If no previous screen is set, it will clear the screen by setting it to null.
+     * Closes the current screen in the Minecraft client and navigates back to the previous screen if it exists,
+     * or sets the screen to null if there is no previous screen.
+     *
+     * If a previous screen is present, the method sets the Minecraft client's screen to the previous screen
+     * and then clears the previous screen reference.
+     * If no previous screen is available, the method sets the client's screen to null.
      */
     fun closeScreen() {
         if (previousScreen != null) {
