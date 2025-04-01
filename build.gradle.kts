@@ -16,6 +16,7 @@ repositories {
     maven("https://jitpack.io")
     maven("https://maven.isxander.dev/releases")
     maven("https://maven.terraformersmc.com/")
+    maven("https://maven.wispforest.io/releases/")
 }
 
 dependencies {
@@ -31,9 +32,13 @@ dependencies {
 
     implementation("org.reflections:reflections:0.10.2")
 
-    // Mod dependencies
+    // Required Mod dependencies
     modImplementation("dev.isxander:yet-another-config-lib:${project.property("yacl_version")}")
     modImplementation("com.terraformersmc:modmenu:${project.property("modmenu_version")}")
+
+    // Mod dependencies
+    modRuntimeOnly("com.terraformersmc:modmenu:${project.property("modmenu_version")}")
+
 }
 
 tasks.processResources {

@@ -2,11 +2,12 @@ package com.tmiq.commands
 
 import com.mojang.brigadier.context.CommandContext
 import com.tmiq.annotations.Command
-import com.tmiq.config.Config
+import com.tmiq.ui.ConfigGui
 import com.tmiq.utils.UIUtils
+import com.tmiq.utils.Utils
+import com.tmiq.utils.mc.SoundUtils
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
-import net.minecraft.text.Text
 
 @Command(
     name = "hi",
@@ -17,10 +18,12 @@ import net.minecraft.text.Text
 object HelloWorldCommand {
 
     fun execute(context: CommandContext<FabricClientCommandSource>): Boolean {
-        context.source.sendFeedback(Text.of("Hello World!"))
+        context.source.sendFeedback(Utils.translateChat("&6Hello gang"))
 
-        val screen = Config.getScreen(MinecraftClient.getInstance().currentScreen)
-        UIUtils.setScreen(screen)
+        val parent = MinecraftClient.getInstance().currentScreen
+        parent?.let { ConfigGui.openConfigGui(it) }?.let { UIUtils.setScreen(it) }
+
+        SoundUtils.playSuccess()
 
         return true
     }

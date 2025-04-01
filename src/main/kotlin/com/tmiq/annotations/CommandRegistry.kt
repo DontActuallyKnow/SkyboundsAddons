@@ -3,6 +3,7 @@ package com.tmiq.annotations
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
+import com.tmiq.config.Config
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.text.Text
@@ -10,7 +11,6 @@ import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ConfigurationBuilder
 import kotlin.reflect.KCallable
-import kotlin.reflect.KClass
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.jvm.isAccessible
 
@@ -142,6 +142,10 @@ object CommandRegistry {
         val commandNode = LiteralArgumentBuilder
             .literal<FabricClientCommandSource>(annotation.name)
             .executes { context ->
+                if (!Config.GSON.instance().modEnabled) {
+                    return@executes 0
+                }
+
                 try {
                     val result = executeMethod.call(instance, context) as? Boolean ?: true
                     if (!result) {
