@@ -93,8 +93,6 @@ tasks.shadowJar {
 
     relocate("org.reflections", "${project.group}.shadow.org.reflections")
 
-    minimize()
-
     archiveClassifier.set("dev-shadow")
 }
 

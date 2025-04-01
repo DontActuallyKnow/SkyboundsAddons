@@ -19,8 +19,6 @@ open class Config {
             .build()
     }
 
-    var modEnabled: Boolean = false
-
 //    @SerialEntry
 //    var booleanToggle = false
 //

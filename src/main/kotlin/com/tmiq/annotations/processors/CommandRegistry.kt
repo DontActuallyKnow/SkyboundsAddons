@@ -1,9 +1,10 @@
-package com.tmiq.annotations
+package com.tmiq.annotations.processors
 
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
-import com.tmiq.config.Config
+import com.tmiq.annotations.Command
+import com.tmiq.utils.mc.LocationUtils
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.text.Text
@@ -142,7 +143,7 @@ object CommandRegistry {
         val commandNode = LiteralArgumentBuilder
             .literal<FabricClientCommandSource>(annotation.name)
             .executes { context ->
-                if (!Config.GSON.instance().modEnabled) {
+                if (!LocationUtils.onSkybounds) {
                     return@executes 0
                 }
 

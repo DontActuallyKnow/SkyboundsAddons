@@ -1,8 +1,9 @@
 package com.tmiq
 
-import com.tmiq.annotations.CommandRegistry
+import com.tmiq.annotations.processors.CommandRegistry
 import com.tmiq.config.Config
-import com.tmiq.utils.LocationUtils
+import com.tmiq.features.skills.XPMessageCollection
+import com.tmiq.utils.mc.LocationUtils
 import net.fabricmc.api.ModInitializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -21,6 +22,7 @@ class SkyboundsAddons : ModInitializer {
 
         // TODO Create annotation for events
         LocationUtils.initConnectionEvents()
+        XPMessageCollection.getInstance().initListener()
 
         Config.GSON.load()
 

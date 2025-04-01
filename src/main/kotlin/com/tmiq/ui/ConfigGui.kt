@@ -1,12 +1,8 @@
 package com.tmiq.ui
 
 import com.tmiq.config.Config
-import com.tmiq.utils.LocationUtils
 import dev.isxander.yacl3.api.ConfigCategory
-import dev.isxander.yacl3.api.Option
-import dev.isxander.yacl3.api.OptionDescription
 import dev.isxander.yacl3.api.YetAnotherConfigLib
-import dev.isxander.yacl3.api.controller.BooleanControllerBuilder
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
@@ -30,27 +26,7 @@ class ConfigGui {
                     ConfigCategory.createBuilder()
                         .name(Text.literal("General"))
                         .tooltip(Text.literal("Global settings"))
-                        .option(
-                            Option.createBuilder<Boolean>()
-                                .name(Text.literal("Mod enabled"))
-                                .binding(
-                                    defaults.modEnabled,
-                                    { config.modEnabled },
-                                    { config.modEnabled = it }
-                                )
-                                .description(OptionDescription.of(Text.literal("Enables the mod")))
-                                .controller(BooleanControllerBuilder::create)
-                                .build())
-                        .option(
-                            Option.createBuilder<Boolean>()
-                                .name(Text.literal("On Skybounds"))
-                                .binding(
-                                    false,
-                                    { LocationUtils.onSkybounds },
-                                    { LocationUtils.onSkybounds = it }
-                                )
-                                .controller(BooleanControllerBuilder::create)
-                                .build())
+
                         .build()
                 )
                 .save {
