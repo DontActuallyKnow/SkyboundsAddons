@@ -2,6 +2,7 @@ plugins {
     id("fabric-loom") version "1.10-SNAPSHOT"
     id("maven-publish")
     id("org.jetbrains.kotlin.jvm") version "2.1.20"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 version = project.property("mod_version") as String
@@ -9,6 +10,16 @@ group = project.property("maven_group") as String
 
 base {
     archivesName.set(project.property("archives_base_name") as String)
+}
+
+val shadowImpl by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
+fun DependencyHandlerScope.shadow(dependencyNotation: Any): Dependency? {
+    shadowImpl(dependencyNotation)
+    return modImplementation(dependencyNotation)
 }
 
 repositories {
@@ -30,7 +41,7 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
-    implementation("org.reflections:reflections:0.10.2")
+    shadow("org.reflections:reflections:0.10.2")
 
     // Required Mod dependencies
     modImplementation("dev.isxander:yet-another-config-lib:${project.property("yacl_version")}")
@@ -75,6 +86,27 @@ tasks.jar {
     from("LICENSE") {
         rename { "${it}_${inputs.properties["archivesName"]}" }
     }
+}
+
+tasks.shadowJar {
+    configurations = listOf(shadowImpl)
+
+    relocate("org.reflections", "${project.group}.shadow.org.reflections")
+
+    minimize()
+
+    archiveClassifier.set("dev-shadow")
+}
+
+val remapShadowJar = tasks.register<net.fabricmc.loom.task.RemapJarTask>("remapShadowJar") {
+    dependsOn(tasks.shadowJar)
+    inputFile.set(tasks.shadowJar.get().archiveFile)
+    archiveClassifier.set("")
+    addNestedDependencies.set(true)
+}
+
+tasks.assemble {
+    dependsOn(remapShadowJar)
 }
 
 // configure the maven publication
