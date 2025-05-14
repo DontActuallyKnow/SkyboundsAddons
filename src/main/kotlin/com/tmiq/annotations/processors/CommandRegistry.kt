@@ -77,6 +77,7 @@ object CommandRegistry {
         }
     }
 
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun registerCommands(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
         val reflections = Reflections(
             ConfigurationBuilder()
@@ -149,7 +150,7 @@ object CommandRegistry {
             hasSubcommands = hasSubcommands
         )
 
-        // If has subcommands, register them
+        // If it has subcommands, register them
         if (hasSubcommands) {
             val clazz = instance::class
             clazz.memberFunctions.forEach { function ->
@@ -239,7 +240,7 @@ object CommandRegistry {
                 executeMethod.call(instance, context) as? Int ?: 1
             }
 
-            // If has subcommands, add them to the alias as well
+            // If it has subcommands, add them to the alias as well
             if (hasSubcommands) {
                 commandData.subcommands.forEach { subcommand ->
                     val subCommandBuilder = LiteralArgumentBuilder.literal<FabricClientCommandSource>(subcommand.name)
@@ -289,9 +290,13 @@ object CommandRegistry {
                     if (index > 0 && index != contextParamIndex) {
                         val argAnnotation = param.findAnnotation<Argument>()
                         if (argAnnotation != null) {
-                            args.add(collectedArgs[argAnnotation.name] ?:
-                            if (argAnnotation.optional) convertDefault(argAnnotation.defaultValue, param.type.classifier as KClass<*>)
-                            else null)
+                            args.add(
+                                collectedArgs[argAnnotation.name] ?: if (argAnnotation.optional) convertDefault(
+                                    argAnnotation.defaultValue,
+                                    param.type.classifier as KClass<*>
+                                )
+                                else null
+                            )
                         }
                     }
                 }
@@ -335,9 +340,13 @@ object CommandRegistry {
                     if (index > 0 && index != contextParamIndex) {
                         val argAnnotation = param.findAnnotation<Argument>()
                         if (argAnnotation != null) {
-                            args.add(collectedArgs[argAnnotation.name] ?:
-                            if (argAnnotation.optional) convertDefault(argAnnotation.defaultValue, param.type.classifier as KClass<*>)
-                            else null)
+                            args.add(
+                                collectedArgs[argAnnotation.name] ?: if (argAnnotation.optional) convertDefault(
+                                    argAnnotation.defaultValue,
+                                    param.type.classifier as KClass<*>
+                                )
+                                else null
+                            )
                         }
                     }
                 }
@@ -365,10 +374,12 @@ object CommandRegistry {
                 argument.name,
                 IntegerArgumentType.integer()
             )
+
             Double::class, Float::class -> RequiredArgumentBuilder.argument(
                 argument.name,
                 IntegerArgumentType.integer() // Replace with appropriate type
             )
+
             else -> RequiredArgumentBuilder.argument(
                 argument.name,
                 StringArgumentType.string()
@@ -379,8 +390,10 @@ object CommandRegistry {
     private fun getArgumentValue(context: CommandContext<FabricClientCommandSource>, argument: ArgumentData): Any {
         return when (argument.type) {
             Int::class -> IntegerArgumentType.getInteger(context, argument.name)
-            Double::class -> IntegerArgumentType.getInteger(context, argument.name).toDouble() // Replace with appropriate getter
-            Float::class -> IntegerArgumentType.getInteger(context, argument.name).toFloat() // Replace with appropriate getter
+            Double::class -> IntegerArgumentType.getInteger(context, argument.name)
+                .toDouble() // Replace with appropriate getter
+            Float::class -> IntegerArgumentType.getInteger(context, argument.name)
+                .toFloat() // Replace with appropriate getter
             else -> StringArgumentType.getString(context, argument.name)
         }
     }
@@ -411,7 +424,8 @@ object CommandRegistry {
         }
 
         // /help <command> - show specific command help
-        val commandArgBuilder = RequiredArgumentBuilder.argument<FabricClientCommandSource, String>("command", StringArgumentType.word())
+        val commandArgBuilder =
+            RequiredArgumentBuilder.argument<FabricClientCommandSource, String>("command", StringArgumentType.word())
         commandArgBuilder.executes { context ->
             val commandName = StringArgumentType.getString(context, "command")
             val command = commands[commandName] ?: commands.values.find { commandName in it.aliases }
@@ -430,9 +444,7 @@ object CommandRegistry {
                     context.source.sendFeedback(Utils.translateChat("&6Subcommands:"))
 
                     command.subcommands.forEach { subcommand ->
-                        val usageText = if (subcommand.usage.isNotEmpty()) {
-                            subcommand.usage
-                        } else {
+                        val usageText = subcommand.usage.ifEmpty {
                             buildUsageFromArguments("/${command.name} ${subcommand.name}", subcommand.arguments)
                         }
 
@@ -459,6 +471,7 @@ object CommandRegistry {
         return if (argParts.isEmpty()) baseCommand else "$baseCommand ${argParts.joinToString(" ")}"
     }
 
+    @Suppress("unused")
     fun getCommandByName(name: String): CommandData? {
         return commands[name] ?: commands[aliasToCommand[name]]
     }
